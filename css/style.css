@@ -1,0 +1,28 @@
+footer {
+    position: fixed;
+    height: 60px;
+    bottom: 0;
+    width: 100%;
+	background-color: #333333;
+}
+
+.helloworld-list {
+	padding-left: 0;
+	list-style: none	
+}
+
+.footer > .container-fluid {
+	padding-right: 15px;
+	padding-left: 15px;
+}
+
+.container-fluid .text-muted {
+	margin: 20px 0;
+	font-weight: 300;
+	color: #ffffff;  
+}
+
+.earth-icon {
+	padding-left: 20px;
+	font-size: 128px;	
+}
