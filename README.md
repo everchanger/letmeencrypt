@@ -1,2 +1,2 @@
-# letmeencrypt
-A web project to make encryption easy!
+# Let Me Encrypt
+A small web project to make encryption easy for everyone!
