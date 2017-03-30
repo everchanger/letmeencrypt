@@ -1,16 +1,51 @@
-keyStore = new KeyStore();
+g_storedPairs = [];
+g_keyStore = new KeyStore();
+
+$(document).on('change', ':file', function() {
+var input = $(this),
+	numFiles = input.get(0).files ? input.get(0).files.length : 1,
+	label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+	input.trigger('fileselect', [numFiles, label]);
+});
 
 $(document).ready(function() {	
-	keyStore.open().then(function() {
-		keyStore.getKey("name", "myTestPair").then(function(keyPair) {
-			if(keyPair == null)  {
-				keyPair = generateKey();
+	g_keyStore.open().then(function() {
+		g_keyStore.listKeys().then(function(list) {
+			if(list == null)  {
+				return;
 			}
 			
-			console.log(keyPair.name);	
-			encrypt_decrypt(keyPair);
+			g_storedPairs = list;
+			
+			for(var i=0;i<g_storedPairs.length;i++) {
+				$("#key_selector").append($("<option></option>").attr("value",g_storedPairs[i].value.name).text(g_storedPairs[i].value.name));				
+			}
+			
+			if($("#key_selector option").length > 1) {
+				$("#key_selector option")[0].remove();
+				$("#key_selector").prop('disabled', false);	
+					
+				$("#get_public").prop('disabled', false);
+				$("#get_private").prop('disabled', false);				
+			}
 		})
 	})
+	
+	$(':file').on('fileselect', function(event, numFiles, label) {
+		var input = $(this).parents('.input-group').find(':text'),
+		log = numFiles > 1 ? numFiles + ' files selected' : label;
+
+		if( input.length ) {
+			input.val(log);
+		} else {
+			if( log ) alert(log);
+		}
+
+	});
+	
+	$('#generate_key_pair').on('click', generateKey);
+	$('#get_public').on('click', getPublicKey);
+	$('#get_private').on('click', getPrivateKey);
 	
 	// Check if we have a function to run on this page!
 	if (typeof OnReady == 'function') { 
@@ -20,6 +55,12 @@ $(document).ready(function() {
 
 async function generateKey() {
 	var Crypt = window.crypto || window.msCrypto;
+
+	var pairName = $("#new_pair_name").val();
+	
+	if(pairName == "" || pairNameExists(pairName)) {
+		return 0;
+	}
 	
 	const keyPair = await Crypt.subtle.generateKey(
             {
@@ -32,7 +73,7 @@ async function generateKey() {
             ['encrypt','decrypt']
         );
 		
-	keyStore.storeKey(keyPair.publicKey, keyPair.privateKey, "myTestPair");
+	g_keyStore.storeKey(keyPair.publicKey, keyPair.privateKey, pairName);
 	
 	return keyPair;
 }
@@ -52,6 +93,26 @@ async function encrypt_decrypt(keyPair) {
 	console.log(ab2str(plainText));		
 }
 
+async function useKey(pairName) {
+	if(pairName == "") {
+		return 0;
+	}
+	
+	g_keyStore.getKey("name", pairName).then(function(keyPair) {		
+		encrypt_decrypt(keyPair);
+	})	
+}
+
+function pairNameExists(pairName) {
+	for(var i=0;i<g_storedPairs.length;i++) {
+		if(g_storedPairs[i].value.name == pairName) {
+			return true;
+		}				
+	}	
+	
+	return false;
+}
+
 function readKeyFromInput(keys) {
 	if(keys.length <= 0) {
 		return;
@@ -63,6 +124,28 @@ function readKeyFromInput(keys) {
 	var reader = new FileReader();
     reader.onload = (function(output) { return function(e) { output.val(ab2str(e.target.result)); }; })(outputArea);
     reader.readAsArrayBuffer(key);
+}
+
+async function getPublicKey() {
+	var Crypt = window.crypto || window.msCrypto;
+	var pairName = $("#key_selector").val();
+	
+	if(pairName == "" || !pairNameExists(pairName)) {
+		return 0;
+	}
+	
+	g_keyStore.getKey("name", pairName).then(function(keyPair) {		
+		Crypt.subtle.exportKey("spki", keyPair.publicKey).then(function(exportedKey) {		
+			console.log(exportedKey);
+					
+			saveAs(new Blob([exportedKey], {type: "example/binary"}), "data.dat");
+		})		
+	})	
+}
+
+function getPrivateKey() {
+	var file = new File(["Hello, world!"], "hello world.txt", {type: "text/plain;charset=utf-8"});
+	saveAs(file);
 }
 
 function ajaxUploadFile(elm, callback) {

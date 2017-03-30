@@ -30,3 +30,7 @@ footer {
 .no-padding {
 	padding: 0;	
 }
+
+.hidden {
+	display: none;
+}
