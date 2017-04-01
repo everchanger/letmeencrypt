@@ -73,6 +73,21 @@ function KeyStore() {
             });
         });
     };
+	
+	// clearDB method
+    self.clearDB = function() {
+        return new Promise(function(fulfill, reject) {
+            if (!self.db) {
+                reject(new Error("KeyStore is not open."));
+            }
+
+			var transaction = self.db.transaction([self.objectStoreName], "readwrite");
+
+			var objectStore = transaction.objectStore(self.objectStoreName);
+			var request = objectStore.clear();
+
+        });
+    };
 
 
     // getKey method
