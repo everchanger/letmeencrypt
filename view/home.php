@@ -55,7 +55,13 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-xs-offset-6 col-xs-6">
+		<div class="col-xs-6">
+			<h3>Encrypt test</h3>
+			<div class="form-group">
+				<button id="test_encrypt" class="btn btn-primary"> Test</button>
+			</div>
+		</div>
+		<div class="col-xs-6">
 			<h3>Decrypt</h3>
 			<div class="form-group">
 				<div class="input-group">

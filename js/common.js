@@ -51,6 +51,7 @@ $(document).ready(function() {
 	$('#get_public').on('click', getPublicKey);
 	$('#get_private').on('click', getPrivateKey);
 	$('#clear_DB').on('click', clearDB);
+	$('#test_encrypt').on('click', testEncryptFile);
 	
 	$('#encrypt_text').on('click', function() {
 		var cleartext = $('#cleartext').val();
@@ -58,7 +59,7 @@ $(document).ready(function() {
 	});
 	$('#decrypt_file').on('click', function() {
 		var files = $('#encrypted_files').prop("files");
-		readDataFromFileInput(files, decrypt);			
+		readDataFromFileInput(files, testDecryptFile);			
 	});
 	
 	// Check if we have a function to run on this page!
@@ -104,6 +105,40 @@ async function clearDB() {
 	location.reload();
 	
 	return;
+}
+
+async function testEncryptFile() {
+	var Crypt = window.crypto || window.msCrypto;
+	
+	var pairName = $("#key_selector").val();
+	
+	if(pairName == "" || !pairNameExists(pairName)) {
+		return 0;
+	}
+	
+	g_keyStore.getKey("name", pairName).then(function(keyPair) {		
+		const ptUtf8 = new TextEncoder().encode('hello world');
+		encryptFile(keyPair.publicKey, ptUtf8, 'foo').then(function(encryptedData) {
+			saveBinaryDataAs(encryptedData, 'message.enc');			
+		});
+	});	
+}
+
+async function testDecryptFile(cryptFile) {
+	var Crypt = window.crypto || window.msCrypto;
+	
+	var pairName = $("#key_selector").val();
+	
+	if(pairName == "" || !pairNameExists(pairName)) {
+		return 0;
+	}
+	
+	g_keyStore.getKey("name", pairName).then(function(keyPair) {		
+		decryptFile(keyPair.privateKey, cryptFile, 'foo').then(function(decryptedData) {
+			// alert(decryptedData);			
+		});
+	});	
+	
 }
 
 async function encrypt(message) {
