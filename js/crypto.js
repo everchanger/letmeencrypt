@@ -23,7 +23,7 @@ async function encryptFile(publicKey, filedata, filename) {
 	*/
 	
 	// Generate bulk crypto key and iv.
-	const encKey = await Crypt.subtle.generateKey({name: "AES-CBC", length: 256}, true,	["encrypt", "decrypt"]);
+	const encKey = await Crypt.subtle.generateKey({name: "AES-CBC", length: 256}, false, ["decrypt", "encrypt"]);
 	var iv = Crypt.getRandomValues(new Uint8Array(16));
 	
 	// Encrypt filedata with the bulk key
@@ -57,18 +57,26 @@ async function decryptFile(privateKey, buffer, filename) {
 	
 	var encryptedIV = new Uint8Array(index);
 	encryptedIV.set(tmp.slice(0, index));
+		
+	var encryptedData = new Uint8Array(buffer.byteLength - (index+IV_END.byteLength));
+	encryptedData.set(tmp.slice(index+IV_END.byteLength));
 	
 	// Encrypt iv using the users public key
 	const iv = await Crypt.subtle.decrypt({name: "RSA-OAEP"}, privateKey, encryptedIV);
+		
+	// Generate bulk crypto key and iv.
+	const decKey = await Crypt.subtle.generateKey({name: "AES-CBC", length: 256}, false, ["decrypt", "encrypt"]);
 	
-	/*.then(function(decryptedData) {
+	// Decrypt filedata with the bulk key
+    Crypt.subtle.decrypt({name: "AES-CBC", iv: iv}, decKey, encryptedData).then(function(decryptedData) {
 			const plaintext = new TextDecoder().decode(decryptedData);
 			alert('message contained:\n'+plaintext);			
 		}).catch(function(e) {
   console.log(e); // "oh, no!"
-});*/
+});
 	
-	alert(iv);
+	/*const plaintext = new TextDecoder().decode(decryptedData);
+	alert('message contained:\n'+plaintext);	*/		
 }
 
 function findInData(haystack, needle, origin) {
@@ -108,5 +116,5 @@ function findInData(haystack, needle, origin) {
 		} 
 	}
 	
-	return current_start_index-1;
+	return current_start_index - 1;
 }
