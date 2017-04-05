@@ -36,7 +36,7 @@ async function encryptFile(publicKey, filedata, filename) {
 	var tmp = new Uint8Array(cryptData.byteLength+encryptedIV.byteLength+IV_END.length);
 	tmp.set(new Uint8Array(encryptedIV), 0);
 	tmp.set(new Uint8Array(IV_END), encryptedIV.byteLength);
-	tmp.set(new Uint8Array(cryptData), IV_END.byteLength);
+	tmp.set(new Uint8Array(cryptData), encryptedIV.byteLength+IV_END.byteLength);
 	
 	return tmp;
 }
