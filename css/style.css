@@ -26,3 +26,11 @@ footer {
 	padding-left: 20px;
 	font-size: 128px;	
 }
+
+.no-padding {
+	padding: 0;	
+}
+
+.hidden {
+	display: none;
+}
