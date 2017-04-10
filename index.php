@@ -2,6 +2,7 @@
 	include_once('utils/constants.php');
 	include_once('utils/functions.php');
 	include_once('utils/autoloader.php');
+	include_once('model/db.php');
 	
 	session_start();
 				
