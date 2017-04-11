@@ -5,16 +5,18 @@
 	include_once('model/db.php');
 	
 	session_start();
-				
+
 	// the use of this module is to catch the incoming requests and push them in the right direction.
 	$control = "home";
 	$action  = "show";
 	
-	if(array_key_exists("controller", $_GET)) {
+	if(array_key_exists("controller", $_GET)) 
+	{
 		$control = $_GET["controller"];
 	}
 
-	if(array_key_exists("action", $_GET)) {
+	if(array_key_exists("action", $_GET)) 
+	{
 		$action = $_GET["action"];
 	}
 		

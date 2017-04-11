@@ -2,5 +2,7 @@
 
 namespace model;
 
-class base {
+class base 
+{
+    
 }

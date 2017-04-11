@@ -1,19 +1,25 @@
 <?php
 
-if(!function_exists('hash_equals')) {
-  function hash_equals($str1, $str2) {
-    if(strlen($str1) != strlen($str2)) {
-      return false;
-    } else {
-      $res = $str1 ^ $str2;
-      $ret = 0;
-      for($i = strlen($res) - 1; $i >= 0; $i--) $ret |= ord($res[$i]);
-      return !$ret;
-    }
-  }
+if(!function_exists('hash_equals')) 
+{
+	function hash_equals($str1, $str2) 
+	{
+		if(strlen($str1) != strlen($str2)) 
+		{
+			return false;
+		} 
+		else 
+		{
+			$res = $str1 ^ $str2;
+			$ret = 0;
+			for($i = strlen($res) - 1; $i >= 0; $i--) $ret |= ord($res[$i]);
+				return !$ret;
+		}
+	}
 }
 
-function hash_password($password) {
+function hash_password($password) 
+{
 	// https://alias.io/2010/01/store-passwords-safely-with-php-and-mysql/
 	// A higher "cost" is more secure but consumes more processing power
 	$cost = 10;
@@ -31,41 +37,38 @@ function hash_password($password) {
 	return $hash;
 }
 
-function validate_password($pwd_hash, $password) {
+function validate_password($pwd_hash, $password)
+{
 	// Hashing the password with its hash as the salt returns the same hash
 	$crypt = crypt($password, $pwd_hash);
 	$equals = hash_equals($pwd_hash, $crypt);
 	return $equals;
 }
 
-function getConnection(){
-	static $connection;
-
-	if($connection == false){
-		$connection = mysqli_connect('localhost', 'root', '', 'testdb2');
-		if($connection == false){
-			die("Connection failed: " . mysqli_connect_error());
-		}
-	}
-	return $connection;
-}
-
-function getParameter($key) {
-	if(array_key_exists($key, $_GET)) {
+function getParameter($key) 
+{
+	if(array_key_exists($key, $_GET)) 
+	{
 		return $_GET[$key];
-	} else if(array_key_exists($key, $_POST)) {
+	} 
+	else if(array_key_exists($key, $_POST)) 
+	{
 		return $_POST[$key];
 	}
 	
 	return NULL;
 }
 
-function sendFileToClient($file, $new_filename = NULL) {
+function sendFileToClient($file, $new_filename = NULL) 
+{
 	header('Content-Description: File Transfer');
     header('Content-Type: application/octet-stream');
-	if($new_filename != NULL) {
+	if($new_filename != NULL) 
+	{
 		header('Content-Disposition: attachment; filename='.$new_filename);
-	} else {
+	}
+	else 
+	{
 		header('Content-Disposition: attachment; filename='.basename($file));
 	}
     header('Expires: 0');
@@ -75,7 +78,8 @@ function sendFileToClient($file, $new_filename = NULL) {
     readfile($file);
 }
 
-function loadController($controller, $action) {
+function loadController($controller, $action) 
+{
 	// find the requested controller and use the action on it
 	
 	$filename 	= __DIR__.'/controller/'.$controller.'.php';
@@ -85,10 +89,12 @@ function loadController($controller, $action) {
 	$instance->$action();
 }
 
-function loadViewWithTemplate($view, $args, $usetemplate) {
+function loadViewWithTemplate($view, $args, $usetemplate) 
+{
 	$view_file_name = "view/".$view.'.php';
 
-	if (! file_exists($view_file_name)) {
+	if (! file_exists($view_file_name)) 
+	{
 		// FIX: ADD ERROR HANDLING
 		die("FILE DOESNT EXIST: ". $view_file_name);
 		return 0;
@@ -96,17 +102,21 @@ function loadViewWithTemplate($view, $args, $usetemplate) {
 
 	extract($args);
 	
-	if($usetemplate) {
+	if($usetemplate) 
+	{
 		ob_start();
 		
 		include "view/_template.php";
 		return ob_get_clean(); 
-	} else {
+	} 
+	else 
+	{
 		include $view_file_name;	
 	}
 }
 
-function respondWithView($view, $args, $status = 200, $usetemplate = true) {
+function respondWithView($view, $args, $status = 200, $usetemplate = true) 
+{
 	date_default_timezone_set ("Europe/Stockholm");
 
 	header('Pragma: no-cache');
@@ -120,7 +130,8 @@ function respondWithView($view, $args, $status = 200, $usetemplate = true) {
 	exit;
 }
 
-function respondWithStatus($status = 200) {
+function respondWithStatus($status = 200) 
+{
 	date_default_timezone_set ("Europe/Stockholm");
 
 	header('Pragma: no-cache');
