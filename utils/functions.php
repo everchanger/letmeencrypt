@@ -45,20 +45,6 @@ function validate_password($pwd_hash, $password)
 	return $equals;
 }
 
-function getParameter($key) 
-{
-	if(array_key_exists($key, $_GET)) 
-	{
-		return $_GET[$key];
-	} 
-	else if(array_key_exists($key, $_POST)) 
-	{
-		return $_POST[$key];
-	}
-	
-	return NULL;
-}
-
 function sendFileToClient($file, $new_filename = NULL) 
 {
 	header('Content-Description: File Transfer');
