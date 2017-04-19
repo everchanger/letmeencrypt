@@ -36,7 +36,7 @@
 				<?php if(!isset($_SESSION['username'])): ?>
 				<form class="navbar-form navbar-right" action="?controller=user&action=login" method="POST">
         	<div class="form-group">
-          	<input type="email" class="form-control" placeholder="user@mail.net" name="email">
+          	<input type="email" class="form-control" placeholder="user@mail.net" name="email" id="email">
         	</div>
 					<div class="form-group">
           	<input type="password" class="form-control" placeholder="Password" name="password">
@@ -81,5 +81,6 @@
 		<script type="text/javascript" src="js/FileSaver.js"></script>
 		<script type="text/javascript" src="js/keystore.js"></script>
 		<script type="text/javascript" src="js/common.js"></script>
+		<script type="text/javascript" src="js/hello.js"></script>
 	</body>
 </html>

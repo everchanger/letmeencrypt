@@ -1,9 +1,14 @@
+/// <reference path="jquery.d.ts" />
+
 class Startup {
-    public main(): number {
-        console.log('Testing TypeScript');
+    public main(input:JQuery): number {
+        input.val('Testing');
         return 0;
     }
 }
 
-let test: Startup = new Startup();
-test.main();
+$(document).ready(function(){
+    let test: Startup = new Startup();
+    test.main($('#email'));
+});
+
