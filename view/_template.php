@@ -79,7 +79,7 @@
 		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="js/crypto.js"></script>
 		<script type="text/javascript" src="js/FileSaver.js"></script>
-		<script type="text/javascript" src="js/keystore.js"></script>
+		<script type="text/javascript" src="js/keystore_new.js"></script>
 		<script type="text/javascript" src="js/common.js"></script>
 		<script type="text/javascript" src="js/hello.js"></script>
 	</body>
