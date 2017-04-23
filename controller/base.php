@@ -8,7 +8,12 @@ class Base
 	public function __construct() 
 	{		
 	}
-		
+	
+	protected function respondWithError($errorText, $errorCode=500)
+	{
+		respondWithStatus($errorText, $errorCode);
+	}
+
 	protected function respond($view, $args) 
 	{	
 		respondWithView($view, $args);

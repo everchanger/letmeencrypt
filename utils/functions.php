@@ -116,7 +116,7 @@ function respondWithView($view, $args, $status = 200, $usetemplate = true)
 	exit;
 }
 
-function respondWithStatus($status = 200) 
+function respondWithStatus($message = OK, $status = 200) 
 {
 	date_default_timezone_set ("Europe/Stockholm");
 
@@ -125,9 +125,9 @@ function respondWithStatus($status = 200)
 	header("Cache-Control: max-age=0, must-revalidate, no-store, no-cache");
 
 	header('Status: '.$status);
-    header($_SERVER['SERVER_PROTOCOL'].' 200');
+    header($_SERVER['SERVER_PROTOCOL'].' '.$status);
 
-	echo "OK";
+	echo $message;
 	exit;
 }
 

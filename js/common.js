@@ -1,6 +1,8 @@
 g_storedPairs = [];
 g_keyStore = new KeyStore();
 
+var g_Crypt = window.crypto || window.msCrypto;
+
 $(document).on('change', ':file', function() {
 var input = $(this),
 	numFiles = input.get(0).files ? input.get(0).files.length : 1,
@@ -67,6 +69,12 @@ $(document).ready(function() {
 		OnReady();
 	}	
 });
+
+function showError(errorText) {
+	$('#main_navbar').addClass('no-margin');
+	$('#error_field').removeClass('hidden');
+	$('#error_message').text(errorText);
+}
 
 async function generateKey() {
 	var Crypt = window.crypto || window.msCrypto;

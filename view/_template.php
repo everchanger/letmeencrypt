@@ -10,7 +10,7 @@
 		<link rel="stylesheet" href="css/style.css">
 	</head>
 	<body>
-		<nav class="navbar navbar-default <?= isset($error_msg) ? 'no-margin' : '' ?>">
+		<nav class="navbar navbar-default <?= isset($error_msg) ? 'no-margin' : '' ?>" id='main_navbar'>
 		  <div class="container-fluid">
 			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">
@@ -57,11 +57,9 @@
 		</nav>
 		
 		<!-- Error handling -->
-		<?php if(isset($error_msg)): ?>
-		<div class="col-xs-12 error-field">
-			<p class="error_message"><?= $error_msg ?></p>
+		<div class="col-xs-12 error-field <?=isset($error_msg) ? '' : 'hidden' ?>" id="error_field">
+			<p class="error_message" id="error_message"><?=isset($error_msg) ? $error_msg : '' ?></p>
 		</div>
-		<?php endif; ?>
 		
 		<div class="container-fluid">
 			<!-- INCLUDE THE SELECTED VIEW! -->
@@ -79,7 +77,7 @@
 		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="js/crypto.js"></script>
 		<script type="text/javascript" src="js/FileSaver.js"></script>
-		<script type="text/javascript" src="js/keystore_new.js"></script>
+		<script type="text/javascript" src="js/keystore.js"></script>
 		<script type="text/javascript" src="js/common.js"></script>
 		<script type="text/javascript" src="js/hello.js"></script>
 	</body>

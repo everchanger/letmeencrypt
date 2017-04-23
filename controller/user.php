@@ -2,7 +2,7 @@
 
 namespace controller;
 
-class User 
+class User extends Base
 {
     public function show() {
         respondWithView("user", array());
@@ -10,16 +10,25 @@ class User
 
     public function register() 
     {
+        if (session_status() == PHP_SESSION_NONE) {
+            die('no session');
+        }
+
         $email      = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
         $password1  = filter_input(INPUT_POST, 'password1', FILTER_SANITIZE_STRING);
         $password2  = filter_input(INPUT_POST, 'password2', FILTER_SANITIZE_STRING);
 
+        // Validate the public and private keys before storing them.
+
+        $public_key     = file_get_contents($_FILES['public_key']['tmp_name']);
+        $private_key    = file_get_contents($_FILES['private_key']['tmp_name']);
+        
         if(!strlen($email)) {
-            respondWithView("register", array("error_msg" => "Please enter a valid email address"));
+            $this->respondWithError("Please enter a valid email address");
         }
 
         if((!strlen($password1) || !strlen($password2)) || $password1 != $password2) {
-            respondWithView("register", array("error_msg" => "Passwords didn't match, please make sure you written the same password in both the password fields."));
+            $this->respondWithError("Passwords didn't match, please make sure you written the same password in both the password fields.");
         }
 
         $password_hash = hash_password($password1);
@@ -27,7 +36,7 @@ class User
 
         try 
         {
-            $user->addUser($email, $password_hash, "123456", "789101112");
+            $user->addUser($email, $password_hash, $public_key, $private_key);
         } 
         catch(\Exception $e) 
         {
@@ -39,10 +48,12 @@ class User
                 default:
                 break;
             }
-            respondWithView("register", array("error_msg" => $errorMsg));            
+            $this->respondWithError($errorMsg);            
         }
 
-        respondWithView("home", array());
+        $_SESSION['username'] = $email;
+
+        respondWithStatus();
     }
 
     public function login() 
