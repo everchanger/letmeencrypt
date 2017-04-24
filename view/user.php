@@ -1,20 +1,12 @@
 <div class="col-xs-12">
 	<div class="row">
-		<div class="col-xs-6">
-			<form class="">
-				<h3>Generate Keys</h3>
-				<div class="input-group">
-					<input class="form-control" type="text" id="new_pair_name" placeholder="Enter a descriptive name for your keypair">
-					<span class="input-group-btn">
-						<button class="btn btn-primary" id="generate_key_pair" type="button">Generate</button>
-					</span>
-				</div>
-				<p class="help-block">Generate a key pair and hold onto the private key! The public key is uploaded to the server.</p>
-			</form>
-		</div>
-		<div class="col-xs-6">
-			<form class="">
-				<h3>Load private key</h3>
+		<div class="col-xs-3">
+			<h3>Key status</h3>
+			<div class="col-xs-12">
+				<p class="help-block">View the current status of your keys.</p>
+				<p>Public key: Loaded</p>
+				<p>Private key: Not Loaded</p>
+				<h4>Load private key</h4>
 				<div class="input-group">
 					<label for="private_key" class="input-group-btn">
 						<span class="btn btn-primary">Browse
@@ -24,59 +16,94 @@
 					<input type="text" class="form-control" readonly="">
 				</div>
 				<p class="help-block">Your private key will not be submited to the server only used localy by javascript to decrypt your files for you.</p>
+			</div>
+		</div>
+		<div class="col-xs-6">
+			<form class="">
+				
 			</form>
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-xs-6">
-			<h3>Stored keys</h3>
-			<div class="form-group">
-				<select class="form-control" id="key_selector" disabled>
-					<option value="none">No keys loaded</option>
-				</select>
-			</div>
-			<div class="form-group">
-				<button id="clear_DB" class="btn btn-danger" disabled><span class="glyphicon glyphicon-download"></span> Clear loaded keys</button>
-				<button id="get_public" class="btn btn-primary" disabled><span class="glyphicon glyphicon-download"></span> Public key</button>
-				<button id="get_private" class="btn btn-primary" disabled><span class="glyphicon glyphicon-download"></span> Private key</button>
-			</div>
-		</div>
-		<div class="col-xs-6">
-			<h3>Encrypt</h3>
-			<div class="form-group">
-				<div class="input-group">
-					<input class="form-control" type="text" id="cleartext" placeholder="Enter a secret message">
-					<span class="input-group-btn">
-						<button class="btn btn-primary" id="encrypt_text" type="button">Encrypt</button>
-					</span>
-				</div>
-				<p class="help-block">Enter a message you wish to encrypt.</p>
+		<div class="col-xs-12">
+		<h3>My encrypted files</h3>
+			<div class="col-xs-12">
+				
+				<p class="help-block">Here are your encrypted files listed, to download the file, simply press the download button and watch the file get downloaded and decrypted!.</p>
+				<ul>
+					<li>
+						<div class="col-xs-3">
+							Filename
+						</div>
+						<div class="col-xs-3">
+							Uploaded by
+						</div>
+						<div class="col-xs-2">
+							Upload date
+						</div>
+						<div class="col-xs-2">
+							Filesize
+						</div>
+						<div class="col-xs-2">
+							Download
+						</div>
+					</li>
+					<?php foreach($files as $file): ?>
+					<li>
+						<div class="col-xs-3">
+							<?= $file->filename ?>
+						</div>
+						<div class="col-xs-3">
+							<?= $file->uploaded_by ?>
+						</div>
+						<div class="col-xs-2">
+							<?= $file->upload_date ?>
+						</div>
+						<div class="col-xs-2">
+							<?= $file->size ?>
+						</div>
+						<div class="col-xs-2">
+							<a href="?controller=file&action=get&file=<?=$file->id?>">Download</a>
+						</div>
+					</li>
+					<?php endforeach; ?>
+				</ul>
 			</div>
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-xs-6">
-			<h3>Encrypt test</h3>
-			<div class="form-group">
-				<button id="test_encrypt" class="btn btn-primary"> Test</button>
-			</div>
-		</div>
-		<div class="col-xs-6">
-			<h3>Decrypt</h3>
-			<div class="form-group">
+		<div class="col-xs-3">
+			<h3>Encrypt file</h3>
+			<div class="col-xs-12">
+				<p class="help-block">Encrypt a file for storage, either for yourself or for a friend.</p>
+				<p>Choose file</p>
 				<div class="input-group">
-					<label for="encrypted_files" class="input-group-btn">
+					<label for="plain_file" class="input-group-btn">
 						<span class="btn btn-primary">Browse
-							<input type="file" id="encrypted_files" class="hidden">
+							<input type="file" id="plain_file" class="hidden">
 						</span>
 					</label>
 					<input type="text" class="form-control" readonly="">
 				</div>
-				<p class="help-block">Upload a file with encrypted text to decrypt it with the selected key.</p>
-			</div>
-			<div class="form-group">
-				<button id="decrypt_file" class="btn btn-primary"><span class="glyphicon glyphicon-resize-full"></span> Decrypt file</button>
+				<p class="help-block">The file will not be submitted until encryption has been applied.</p>
+				<div class="form-group">
+					<input type="radio" id="target_friend" name="reciever" value="friend" checked> Friend
+					<input type="radio" id="target_me" name="reciever" value="myself"> Myself
+					<p class="help-block">Chose who the reciever of the file is.</p>
+				</div>
+				<div class="form-group">
+					<select class="form-control" id="friend_list">
+						<?php foreach($friends as $friend): ?>
+						<option value="<?=$friend?>"><?=$friend?></option>
+						<?php endforeach ?>
+					</select>
+				</div>
+				<div class="form-group">
+					<button class="btn btn-primary" id="encrypt" disabled>Encrypt and upload!</button>
+				</div>
 			</div>
 		</div>
 	</div>
 </div>
+
+<script type="text/javascript" src="js/user.js"></script>

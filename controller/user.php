@@ -2,10 +2,42 @@
 
 namespace controller;
 
+class file 
+{
+    public $id             = "";
+    public $filename       = "";
+    public $uploaded_by    = "";
+    public $upload_date    = "";
+    public $size           = "";
+
+    public function __construct($id, $filename, $uploaded_by, $upload_date, $size) 
+    {
+        $this->id             = $id;
+        $this->filename       = $filename;
+        $this->uploaded_by    = $uploaded_by;
+        $this->upload_date    = $upload_date;
+        $this->size           = $size;
+    }
+}
+
 class User extends Base
 {
     public function show() {
-        respondWithView("user", array());
+        $friends   = array(); 
+        $files     = array();
+
+        $friends[] = "tasty@stuff.com";
+        $friends[] = "nasty@jet.com";
+        $friends[] = "zasty@shuffle.com";
+
+        $file = new \controller\file(0, "prettyphoto.jpg", "test.testsson@gmail.com", "2017-04-25", "2048");
+
+        $files[] = $file;
+        respondWithView("user", array("files" => $files, "friends" => $friends));
+    }
+
+    public function test() {
+        respondWithView("test", array());
     }
 
     public function register() 

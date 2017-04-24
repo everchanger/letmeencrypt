@@ -7,7 +7,13 @@ footer
 	background-color: #333333;
 }
 
-.no-margin {
+li 
+{
+	list-style: none;
+}
+
+.no-margin
+ {
 	margin: 0;
 }
 
@@ -51,12 +57,14 @@ footer
 	color: #D92727;	
 }
 
-.error-field {
+.error-field 
+{
 	background-color: #272727;
 	margin-bottom: 21px;
 }
 
-.error-field p {
+.error-field p
+ {
 	margin: 5px 0;
 	font-size: 13px;
 }
