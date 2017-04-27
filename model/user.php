@@ -46,7 +46,7 @@ class User
                 throw new \Exception("No user with email: ".$email." found", ERROR_CODE_USER_NOT_FOUND);
             }
 
-            return $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $stmt->fetch(\PDO::FETCH_OBJ);
         } 
         catch (\Exception $e) 
         {

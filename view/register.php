@@ -2,21 +2,21 @@
     <h4>Sign up</h4>
     <form action="?controller=user&action=register" method="POST" class="form-horizontal" id="register">
         <div class="form-group">
-            <label for="email" class="col-xs-3 control-label">Email</label>
+            <label for="register_email" class="col-xs-3 control-label">Email</label>
             <div class="col-xs-9">
-                <input type="email" required class="form-control" name="email" id="email" placeholder="user@email.net" />
+                <input type="email" required class="form-control" id="register_email" placeholder="user@email.net" />
             </div>
         </div>
         <div class="form-group">
-            <label for="password1" class="col-xs-3 control-label">Password</label>
+            <label for="register_password1" class="col-xs-3 control-label">Password</label>
             <div class="col-xs-9">
-                <input type="password" required class="form-control" name="password1" id="password1" placeholder="Password" />
+                <input type="password" required class="form-control" id="register_password1" placeholder="Password" />
             </div>
         </div>
         <div class="form-group">
-            <label for="password2" class="col-xs-3 control-label">Confirm password</label>
+            <label for="register_password2" class="col-xs-3 control-label">Confirm password</label>
             <div class="col-xs-9">
-                <input type="password" required class="form-control" name="password2" id="password2" placeholder="Confirm password" />
+                <input type="password" required class="form-control" id="register_password2" placeholder="Confirm password" />
             </div>
         </div>
         <div class="form-group">

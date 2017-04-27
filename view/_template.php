@@ -61,6 +61,8 @@
 			<p class="error_message" id="error_message"><?=isset($error_msg) ? $error_msg : '' ?></p>
 		</div>
 		
+		<!-- Loading bar under main navbar, please fix! -->
+
 		<div class="container-fluid">
 			<!-- INCLUDE THE SELECTED VIEW! -->
 			<?php include $view_file_name;?>
@@ -79,6 +81,5 @@
 		<script type="text/javascript" src="js/FileSaver.js"></script>
 		<script type="text/javascript" src="js/keystore.js"></script>
 		<script type="text/javascript" src="js/common.js"></script>
-		<script type="text/javascript" src="js/hello.js"></script>
 	</body>
 </html>

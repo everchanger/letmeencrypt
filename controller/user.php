@@ -22,7 +22,12 @@ class file
 
 class User extends Base
 {
-    public function show() {
+    public function show() 
+    {
+        $user = new \model\User();
+
+        $signedInUser = $user->get($_SESSION['username']);
+
         $friends   = array(); 
         $files     = array();
 
@@ -33,19 +38,36 @@ class User extends Base
         $file = new \controller\file(0, "prettyphoto.jpg", "test.testsson@gmail.com", "2017-04-25", "2048");
 
         $files[] = $file;
-        respondWithView("user", array("files" => $files, "friends" => $friends));
+        respondWithView("user", array("user" => $signedInUser, "files" => $files, "friends" => $friends));
     }
 
-    public function test() {
+    public function get_public_key() 
+    {
+        $user = new \model\User();
+
+        $signedInUser = $user->get($_SESSION['username']);    
+
+        echo $signedInUser->public_key;
+        die();
+    }
+
+    public function get_private_key() 
+    {
+        $user = new \model\User();
+
+        $signedInUser = $user->get($_SESSION['username']);    
+
+        echo $signedInUser->private_key;
+        die();
+    }
+
+    public function test() 
+    {
         respondWithView("test", array());
     }
 
     public function register() 
     {
-        if (session_status() == PHP_SESSION_NONE) {
-            die('no session');
-        }
-
         $email      = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
         $password1  = filter_input(INPUT_POST, 'password1', FILTER_SANITIZE_STRING);
         $password2  = filter_input(INPUT_POST, 'password2', FILTER_SANITIZE_STRING);
@@ -102,12 +124,12 @@ class User extends Base
 		try 
 		{
 			$current_user = $user->get($email);
-			$match = validate_password($current_user['pwd_hash'], $password);
+			$match = validate_password($current_user->pwd_hash, $password);
             if(!$match) {
                 throw new \Exception("Wrong password", ERROR_CODE_WRONG_PASSWORD);
             }
 
-            $_SESSION['username'] = $current_user['email'];
+            $_SESSION['username'] = $current_user->email;
 		} 
 		catch(\Exception $e) 
 		{
@@ -125,7 +147,7 @@ class User extends Base
             respondWithView("home", array("error_msg" => $errorMsg));
 		}
 
-		respondWithView("user", array());
+		$this->respondWithController("user");
 	}
 
     public function logout() 

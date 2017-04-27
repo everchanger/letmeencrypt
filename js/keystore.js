@@ -11,6 +11,10 @@ function KeyStore() {
                 reject(new Error("IndexedDB is not supported by this browser."));
             }
 
+            if(self.db) {
+                fulfill(self);
+            }
+
             var req = indexedDB.open(self.dbName, 1);
             req.onsuccess = function(evt) {
                 self.db = evt.target.result;
@@ -51,26 +55,20 @@ function KeyStore() {
                 reject(new Error("KeyStore is not open."));
             }
 
-            window.crypto.subtle.exportKey('spki', publicKey).
-            then(function(spki) {
-                var savedObject = {
-                    publicKey:  publicKey,
-                    privateKey: privateKey,
-                    name:       name,
-                    spki:       spki
-                };
+           
+            var savedObject = {
+                publicKey:  publicKey,
+                privateKey: privateKey,
+                name:       name
+            };
 
-                var transaction = self.db.transaction([self.objectStoreName], "readwrite");
-                transaction.onerror = function(evt) {reject(evt.error);};
-                transaction.onabort = function(evt) {reject(evt.error);};
-                transaction.oncomplete = function(evt) {fulfill(savedObject);};
+            var transaction = self.db.transaction([self.objectStoreName], "readwrite");
+            transaction.onerror = function(evt) {reject(evt.error);};
+            transaction.onabort = function(evt) {reject(evt.error);};
+            transaction.oncomplete = function(evt) {fulfill(savedObject);};
 
-                var objectStore = transaction.objectStore(self.objectStoreName);
-                var request = objectStore.add(savedObject);
-            }).
-            catch(function(err) {
-                reject(err);
-            });
+            var objectStore = transaction.objectStore(self.objectStoreName);
+            var request = objectStore.add(savedObject);
         });
     };
 	

@@ -7,13 +7,12 @@ async function handleRegistration(evt) {
     evt.preventDefault();
 
     // Generate a keypair, export the public and private key to a format we can POST then submit the form with the keypair.
-    var pairName = "newPair";
+    var user_email = $('#register_email').val();
+    var pairName = user_email;
     var keyPair = await generateKeyPair(pairName);
 	if(keyPair == null) {
         return "Error";
     }
-
-    var user_email = $('#email').val();
 
     var public_key = await g_Crypt.subtle.exportKey("spki", keyPair.publicKey);
     var public_blob = new Blob([public_key], {type: "application/octet-stream"});
@@ -25,9 +24,9 @@ async function handleRegistration(evt) {
     saveBinaryDataAs(private_key, user_email.substring(0, user_email.indexOf('@'))+'.private_key');
    
     var formData = new FormData();
-    formData.append("email", $('#email').val());
-    formData.append("password1", $('#password1').val());
-    formData.append("password2", $('#password2').val());
+    formData.append("email", user_email);
+    formData.append("password1", $('#register_password1').val());
+    formData.append("password2", $('#register_password2').val());
     formData.append('public_key', public_blob, 'public');
 
     // We should not send/store the private key unencrypted. If we store it we should encrypt it somehow, maybe with the users password?

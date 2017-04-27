@@ -74,3 +74,13 @@ li
 	line-height: 17px;
 	
 }
+
+.key_status.glyphicon-ok 
+{
+	color: green;
+}
+
+.key_status.glyphicon-remove 
+{
+	color: red;
+}

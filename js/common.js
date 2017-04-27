@@ -61,7 +61,7 @@ $(document).ready(function() {
 	});
 	$('#decrypt_file').on('click', function() {
 		var files = $('#encrypted_files').prop("files");
-		readDataFromFileInput(files, testDecryptFile);			
+		readDataFromFileInput(files, decrypt);			
 	});
 	
 	// Check if we have a function to run on this page!
@@ -143,7 +143,7 @@ async function testDecryptFile(cryptFile) {
 	
 	g_keyStore.getKey("name", pairName).then(function(keyPair) {		
 		decryptFile(keyPair.privateKey, cryptFile, 'foo').then(function(decryptedData) {
-			// alert(decryptedData);			
+			 console.log('decrypted: '+decryptedData);			
 		});
 	});	
 	
