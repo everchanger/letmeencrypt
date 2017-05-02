@@ -2,42 +2,33 @@
 
 namespace controller;
 
-class file 
-{
-    public $id             = "";
-    public $filename       = "";
-    public $uploaded_by    = "";
-    public $upload_date    = "";
-    public $size           = "";
-
-    public function __construct($id, $filename, $uploaded_by, $upload_date, $size) 
-    {
-        $this->id             = $id;
-        $this->filename       = $filename;
-        $this->uploaded_by    = $uploaded_by;
-        $this->upload_date    = $upload_date;
-        $this->size           = $size;
-    }
-}
-
 class User extends Base
 {
     public function show() 
     {
         $user = new \model\User();
+        $file = new \model\File();
 
-        $signedInUser = $user->get($_SESSION['username']);
+        $files = array();
+
+        try 
+        {
+            $signedInUser = $user->get($_SESSION['username']);
+            $files = $file->get_users_files($signedInUser->id);
+        } 
+        catch(\Exception $e)
+        {
+            if(intval($e->getCode()) != ERROR_CODE_NO_ENCRYPTED_FILES)
+            {
+                $this->respondWithError("Database error, please try again later"); 
+            }
+        }
 
         $friends   = array(); 
-        $files     = array();
-
         $friends[] = "tasty@stuff.com";
         $friends[] = "nasty@jet.com";
         $friends[] = "zasty@shuffle.com";
 
-        $file = new \controller\file(0, "prettyphoto.jpg", "test.testsson@gmail.com", "2017-04-25", "2048");
-
-        $files[] = $file;
         respondWithView("user", array("user" => $signedInUser, "files" => $files, "friends" => $friends));
     }
 
@@ -77,11 +68,13 @@ class User extends Base
         $public_key     = file_get_contents($_FILES['public_key']['tmp_name']);
         $private_key    = file_get_contents($_FILES['private_key']['tmp_name']);
         
-        if(!strlen($email)) {
+        if(!strlen($email)) 
+        {
             $this->respondWithError("Please enter a valid email address");
         }
 
-        if((!strlen($password1) || !strlen($password2)) || $password1 != $password2) {
+        if((!strlen($password1) || !strlen($password2)) || $password1 != $password2) 
+        {
             $this->respondWithError("Passwords didn't match, please make sure you written the same password in both the password fields.");
         }
 

@@ -143,9 +143,51 @@ async function keyLoaded(request)
     }
 }
 
-async function encryptUserFile(file) 
+async function encryptUserFile(filedata) 
 {
-	var Crypt = window.crypto || window.msCrypto;
+    var filename = $('#file_name').val();
+    var username = $('#email').html().trim();
+
+    // Get the public key from the user that the file is to be sent to. (For now ourselfs only)
+    await g_keyStore.open();
+
+    var keyPair = await g_keyStore.getKey("name", username);
+
+	// Generate bulk crypto key and iv.
+	const encKey = await g_Crypt.subtle.generateKey({name: "AES-CBC", length: 256}, true, ["decrypt", "encrypt"]);
+	var iv = g_Crypt.getRandomValues(new Uint8Array(16));
 	
-	console.log(file);
+	// Encrypt filedata with the bulk key
+    const cryptData = await g_Crypt.subtle.encrypt({name: "AES-CBC", iv: iv}, encKey, filedata);
+	
+	// Encrypt iv using the users public key
+	const encryptedIV   = await g_Crypt.subtle.encrypt({name: "RSA-OAEP"}, keyPair.publicKey, iv);
+    var exported_key    = await g_Crypt.subtle.exportKey("raw", encKey);
+    const encryptedKey  = await g_Crypt.subtle.encrypt({name: "RSA-OAEP"}, keyPair.publicKey, exported_key);
+
+    var iv_blob     = new Blob([encryptedIV], {type: "application/octet-stream"});
+    var key_blob    = new Blob([encryptedKey], {type: "application/octet-stream"});
+    var crypt_blob  = new Blob([cryptData], {type: "application/octet-stream"});
+	
+	var formData = new FormData();
+    formData.append("recievers", '');
+    formData.append("filename", filename);
+    formData.append("iv", iv_blob, 'iv');
+    formData.append("key", key_blob, 'key');
+    formData.append('data', crypt_blob, 'data');
+
+    var request = new XMLHttpRequest();
+
+    request.onreadystatechange = function() {
+         if(request.readyState === XMLHttpRequest.DONE) {
+            if(request.status === 200) {
+                window.location = "?controller=user&action=show";
+            } else if(request.status == 500) {
+                showError(request.responseText);
+            }
+         }
+    }
+
+    request.open('POST', '?controller=file&action=add', true);
+    request.send(formData);
 }

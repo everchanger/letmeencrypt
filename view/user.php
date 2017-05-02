@@ -29,7 +29,7 @@
 							<input type="file" id="plain_file" class="hidden">
 						</span>
 					</label>
-					<input type="text" class="form-control" readonly="">
+					<input type="text" id="file_name" class="form-control" readonly="">
 				</div>
 				<p class="help-block">The file will not be submitted until encryption has been applied.</p>
 				<div class="form-group">
@@ -77,10 +77,10 @@
 					<?php foreach($files as $file): ?>
 					<li>
 						<div class="col-xs-3">
-							<?= $file->filename ?>
+							<?= $file->original_name ?>
 						</div>
 						<div class="col-xs-3">
-							<?= $file->uploaded_by ?>
+							<?= $file->encrypter_user_id ?>
 						</div>
 						<div class="col-xs-2">
 							<?= $file->upload_date ?>
