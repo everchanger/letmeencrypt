@@ -1,5 +1,6 @@
 var g_publicBlob = null;
 var g_privateBlob = null;
+var g_privateIVBlob = null;
 
 function OnReady() 
 {
@@ -82,6 +83,22 @@ async function loadUserKeys()
     }
     request2.open("GET", "?controller=user&action=get_private_key", true);
     request2.send();
+
+    var request3 = new XMLHttpRequest();
+    request3.responseType = 'arraybuffer';
+    request3.key = "iv";
+
+     request3.onreadystatechange = function() {
+         if(request3.readyState === XMLHttpRequest.DONE) {
+            if(request3.status === 200) {
+                keyLoaded(request3);
+            } else if(request3.status == 500) {
+                showError(request3.responseText);
+            }
+         }
+    }
+    request3.open("GET", "?controller=user&action=get_private_iv", true);
+    request3.send();
 }
 
 async function keyLoaded(request) 
@@ -106,8 +123,15 @@ async function keyLoaded(request)
 	    tmp.set(new Uint8Array(g_privateBlob), 0);
         console.log(tmp);
     } 
+    else if(request.key == "iv") 
+    {
+        g_privateIVBlob = request.response;
+        var tmp = new Uint8Array(g_privateIVBlob.byteLength);
+	    tmp.set(new Uint8Array(g_privateIVBlob), 0);
+        console.log(tmp);
+    } 
 
-    if(g_publicBlob && g_privateBlob) 
+    if(g_publicBlob && g_privateBlob && g_privateIVBlob) 
     {
         await g_keyStore.open();
 
@@ -121,7 +145,14 @@ async function keyLoaded(request)
 
             console.log('public: '+crypto_public_key);
 
-            var crypto_private_key  = await g_Crypt.subtle.importKey("pkcs8", g_privateBlob, {
+            var userpassword = localStorage.getItem("userPassword");
+
+            var decrypted_private_key = await decryptPrivateKey(g_privateBlob, g_privateIVBlob, userpassword);
+
+            // See, I told you, not so shady!
+            localStorage.setItem("userPassword", null);
+
+            var crypto_private_key  = await g_Crypt.subtle.importKey("pkcs8", decrypted_private_key, {
                 name: 'RSA-OAEP',
                 modulusLength: 2048,
                 publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
@@ -138,9 +169,22 @@ async function keyLoaded(request)
             $('#private_key_loaded').addClass('glyphicon-ok');
             
         } catch(err) {
-            console.log('Error in keyLoaded: '+e);
+            console.log('Error in keyLoaded: '+err);
         }
     }
+}
+
+async function decryptPrivateKey(encryptedPrivateKey, IV, password) 
+{
+    const pwUtf8 = new TextEncoder().encode(password);
+    const pwHash = await g_Crypt.subtle.digest('SHA-256', pwUtf8);
+
+    const alg = { name: 'AES-GCM', iv: IV };
+    const key = await g_Crypt.subtle.importKey('raw', pwHash, alg, false, ['decrypt']);
+
+    const ptBuffer = await g_Crypt.subtle.decrypt(alg, key, encryptedPrivateKey);
+
+    return ptBuffer;
 }
 
 async function encryptUserFile(filedata) 
@@ -190,4 +234,25 @@ async function encryptUserFile(filedata)
 
     request.open('POST', '?controller=file&action=add', true);
     request.send(formData);
+}
+
+async function decryptUserFile(fileID) 
+{
+    // We need to get the IV, key and the file data, the we can decrypt it all for the user.
+    var request = new XMLHttpRequest();
+    request.responseType = 'arraybuffer';
+
+    request.onreadystatechange = function() {
+         if(request.readyState === XMLHttpRequest.DONE) {
+            if(request.status === 200) {
+                var tmp = new Uint8Array(request.response);
+                console.log(tmp);
+            } else if(request.status == 500) {
+                showError(request.responseText);
+            }
+         }
+    }
+    request.open("GET", "?controller=file&action=get&id="+fileID, true);
+    request.send();
+
 }

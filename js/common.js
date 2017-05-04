@@ -11,6 +11,21 @@ var input = $(this),
 });
 
 $(document).ready(function() {	
+	try 
+	{
+		compabilityCheck();
+	} 
+	catch(e) 
+	{
+		alert("Your browser is missing functionallity to run this page correctly");
+		return;
+	}
+
+	$('#sign-in-button').on('click', function() {
+		// This is not as shady as it looks, we stored the users password temporary to be able to decrypt the private key!
+		localStorage.setItem("userPassword", $('#user-password').val());
+	});
+		
 	g_keyStore.open().then(function() {
 		
 		g_keyStore.listKeys().then(function(list) {
@@ -76,7 +91,21 @@ function showError(errorText) {
 	$('#error_message').text(errorText);
 }
 
-async function generateKey() {
+function compabilityCheck() 
+{
+	if(!window.crypto && !window.msCrypto )
+	{
+		throw new Error("No crypto object availible");
+	}
+
+	if(!window.indexedDB) 
+	{
+		throw new Error("No indexedDB object availible");
+	}
+}
+
+async function generateKey() 
+{
 	var Crypt = window.crypto || window.msCrypto;
 
 	var pairName = $("#new_pair_name").val();

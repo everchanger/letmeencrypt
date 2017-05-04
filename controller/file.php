@@ -47,7 +47,8 @@ class file extends Base
 
 	public function get()
 	{
-		
+		"test123";
+		die();
 	}
 };
 

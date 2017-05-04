@@ -39,7 +39,7 @@
           	<input type="email" class="form-control" placeholder="user@mail.net" name="email" id="email">
         	</div>
 					<div class="form-group">
-          	<input type="password" class="form-control" placeholder="Password" name="password">
+          	<input type="password" class="form-control" placeholder="Password" name="password" id="user-password">
         	</div>
         	<button type="submit" class="btn btn-xs btn-success" id="sign-in-button">Sign in</button>
 				</form>

@@ -4,21 +4,22 @@ namespace model;
 
 class User
 {
-    public function addUser($email, $password_hash, $public_key, $private_key) 
+    public function addUser($email, $password_hash, $public_key, $private_key, $private_iv) 
     {
-        if(!isset($email) || !isset($password_hash) || !isset($public_key) || !isset($private_key)) 
+        if(!isset($email) || !isset($password_hash) || !isset($public_key) || !isset($private_key)|| !isset($private_iv)) 
         {
             throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
         }
 
         try 
         {
-            $stmt = DB::pdo()->prepare("INSERT INTO users (email, pwd_hash, public_key, private_key) VALUES (:email, :pwd_hash, :public_key, :private_key)");
+            $stmt = DB::pdo()->prepare("INSERT INTO users (email, pwd_hash, public_key, private_key, private_iv) VALUES (:email, :pwd_hash, :public_key, :private_key, :private_iv)");
             
             $stmt->bindParam(":email", $email);
             $stmt->bindParam(":pwd_hash", $password_hash);
             $stmt->bindParam(":public_key", $public_key);
             $stmt->bindParam(":private_key", $private_key);
+            $stmt->bindParam(":private_iv", $private_iv);
 
             $stmt->execute();
         } 
@@ -36,7 +37,7 @@ class User
 
         try 
         {
-            $stmt = DB::pdo()->prepare("SELECT id, email, pwd_hash, public_key, private_key FROM users WHERE email = :email");
+            $stmt = DB::pdo()->prepare("SELECT id, email, pwd_hash, public_key, private_key, private_iv FROM users WHERE email = :email");
             
             $stmt->bindParam(":email", $email);
 

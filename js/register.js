@@ -14,23 +14,34 @@ async function handleRegistration(evt) {
         return "Error";
     }
 
+    var password    = $('#register_password1').val();
+    var password2   = $('#register_password2').val(); 
+
+    if(password != password2) {
+        return "Error";
+    }
+
     var public_key = await g_Crypt.subtle.exportKey("spki", keyPair.publicKey);
     var public_blob = new Blob([public_key], {type: "application/octet-stream"});
    
     var private_key =  await g_Crypt.subtle.exportKey("pkcs8", keyPair.privateKey);
-    var private_blob = new Blob([private_key], {type: "application/octet-stream"});
+    var encryptedOutput = await encryptPrivateKey(private_key, password);
+
+    var private_blob = new Blob([encryptedOutput.encryptedKey], {type: "application/octet-stream"});
+    var iv_blob = new Blob([encryptedOutput.IV], {type: "application/octet-stream"});
 
     // Let the user decide if he/she wants to download a copy of the private key.
     saveBinaryDataAs(private_key, user_email.substring(0, user_email.indexOf('@'))+'.private_key');
    
     var formData = new FormData();
     formData.append("email", user_email);
-    formData.append("password1", $('#register_password1').val());
-    formData.append("password2", $('#register_password2').val());
+    formData.append("password1", password);
+    formData.append("password2", password2);
     formData.append('public_key', public_blob, 'public');
 
     // We should not send/store the private key unencrypted. If we store it we should encrypt it somehow, maybe with the users password?
     formData.append('private_key', private_blob, 'private');
+    formData.append('private_iv', iv_blob, 'private_iv');
     
     var request = new XMLHttpRequest();
 
@@ -57,7 +68,7 @@ async function generateKeyPair(pairName)
             publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
             hash: {name: "SHA-256"}
         },
-        true,  // Cannot extract new key
+        true,
         ['encrypt','decrypt']
     );
 
@@ -67,4 +78,16 @@ async function generateKeyPair(pairName)
 async function encryptPrivateKey(privateKey, password) 
 {
     // Encrypt the users private key with the users password.
+    const pwUtf8 = new TextEncoder().encode(password);
+    const pwHash = await crypto.subtle.digest('SHA-256', pwUtf8); 
+
+    const iv = g_Crypt.getRandomValues(new Uint8Array(12));
+    const alg = { name: 'AES-GCM', iv: iv };
+    const key = await g_Crypt.subtle.importKey('raw', pwHash, alg, false, ['encrypt']);
+
+    const ctBuffer = await g_Crypt.subtle.encrypt(alg, key, privateKey);
+
+    var completeObject = {encryptedKey: ctBuffer, IV: iv};
+
+    return completeObject;
 }

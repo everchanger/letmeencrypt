@@ -52,6 +52,16 @@ class User extends Base
         die();
     }
 
+    public function get_private_iv() 
+    {
+        $user = new \model\User();
+
+        $signedInUser = $user->get($_SESSION['username']);    
+
+        echo $signedInUser->private_iv;
+        die();
+    }
+
     public function test() 
     {
         respondWithView("test", array());
@@ -67,6 +77,7 @@ class User extends Base
 
         $public_key     = file_get_contents($_FILES['public_key']['tmp_name']);
         $private_key    = file_get_contents($_FILES['private_key']['tmp_name']);
+        $private_iv     = file_get_contents($_FILES['private_iv']['tmp_name']);
         
         if(!strlen($email)) 
         {
@@ -83,7 +94,7 @@ class User extends Base
 
         try 
         {
-            $user->addUser($email, $password_hash, $public_key, $private_key);
+            $user->addUser($email, $password_hash, $public_key, $private_key, $private_iv);
         } 
         catch(\Exception $e) 
         {
