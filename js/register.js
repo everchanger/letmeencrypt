@@ -21,6 +21,8 @@ async function handleRegistration(evt) {
         return "Error";
     }
 
+    localStorage.setItem("userPassword", password);
+
     var public_key = await g_Crypt.subtle.exportKey("spki", keyPair.publicKey);
     var public_blob = new Blob([public_key], {type: "application/octet-stream"});
    

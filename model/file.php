@@ -49,7 +49,7 @@ class File
 
         try 
         {
-            $stmt = DB::pdo()->prepare("SELECT ef.original_name, ef.id, ef.upload_date, ef.encrypter_user_id, ef.size FROM encrypted_files AS ef INNER JOIN encrypted_keys_ivs AS eki  WHERE eki.user_id = :user_id AND eki.file_id = ef.id");
+            $stmt = DB::pdo()->prepare("SELECT ef.original_name, ef.id, ef.upload_date, ef.encrypter_user_id, ef.size FROM encrypted_files AS ef INNER JOIN encrypted_keys_ivs AS eki WHERE eki.user_id = :user_id AND eki.file_id = ef.id");
             
             $stmt->bindParam(":user_id", $user_id);
 
@@ -60,6 +60,35 @@ class File
             }
 
             return $stmt->fetchAll(\PDO::FETCH_OBJ);
+        } 
+        catch (\Exception $e) 
+        {
+            throw $e;
+        } 
+    }
+
+    public function get($user_id, $file_id)
+    {
+        // We need the user ID to verify that the person making the request is the user that this file belongs to.
+        if(!isset($user_id) || !isset($file_id)) 
+        {
+            throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
+        }
+
+        try 
+        {
+            $stmt = DB::pdo()->prepare("SELECT ef.file_name, eki.encrypted_key, eki.encrypted_iv FROM  encrypted_files AS ef JOIN encrypted_keys_ivs AS eki ON eki.file_id = ef.id WHERE eki.file_id = :file_id AND eki.user_id = :user_id");
+            
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->bindParam(":file_id", $file_id);
+
+            $stmt->execute();
+
+            if ($stmt->rowCount() <= 0){
+                throw new \Exception("No file with id: ".$file_id." found for user with id: ".$user_id, ERROR_CODE_NO_ENCRYPTED_FILES);
+            }
+
+            return $stmt->fetch(\PDO::FETCH_OBJ);
         } 
         catch (\Exception $e) 
         {

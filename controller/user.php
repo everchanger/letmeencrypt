@@ -32,32 +32,16 @@ class User extends Base
         respondWithView("user", array("user" => $signedInUser, "files" => $files, "friends" => $friends));
     }
 
-    public function get_public_key() 
+    public function get_binary_data() 
     {
         $user = new \model\User();
 
         $signedInUser = $user->get($_SESSION['username']);    
 
         echo $signedInUser->public_key;
-        die();
-    }
-
-    public function get_private_key() 
-    {
-        $user = new \model\User();
-
-        $signedInUser = $user->get($_SESSION['username']);    
-
+        echo SPLITTER;
         echo $signedInUser->private_key;
-        die();
-    }
-
-    public function get_private_iv() 
-    {
-        $user = new \model\User();
-
-        $signedInUser = $user->get($_SESSION['username']);    
-
+        echo SPLITTER;
         echo $signedInUser->private_iv;
         die();
     }

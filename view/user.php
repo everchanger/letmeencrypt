@@ -89,7 +89,7 @@
 							<?= $file->size ?>
 						</div>
 						<div class="col-xs-2">
-							<a href="?controller=file&action=get&file=<?=$file->id?>">Download</a>
+							<a class="download_file" href="#" name="<?=$file->original_name?>" id="<?=$file->id?>">Download</a>
 						</div>
 					</li>
 					<?php endforeach; ?>

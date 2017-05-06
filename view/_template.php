@@ -30,6 +30,13 @@
 				<li class="active">
 					<a href="?controller=home&action=register">Sign Up</a>
 				</li>
+				<?php else: ?>
+				<li>
+					<a href="#"><span class="glyphicon glyphicon-user"></span> Friends</a>
+				</li>
+				<li>
+					<a href="?controller=user&action=files"><span class="glyphicon glyphicon-file"></span> Files</a>
+				</li>
 				<?php endif; ?>
 			  </ul>
 				
@@ -68,11 +75,11 @@
 			<?php include $view_file_name;?>
 		</div>
 		
-		<footer class="footer">
+		<!--<footer class="footer">
 			<div class="container-fluid footer-content">
 				<p class="text-muted">Copyright Joakim Rosenstam 2017</p>
 			</div>
-		</footer>	
+		</footer>-->	
 
 		<!-- JAVASCRIPT -->
 		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>

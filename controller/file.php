@@ -9,12 +9,18 @@ class file extends Base
 		$recievers  	= filter_input(INPUT_POST, 'recievers', FILTER_SANITIZE_STRING);
 		$filename  		= filter_input(INPUT_POST, 'filename', FILTER_SANITIZE_STRING);
 
+		// Check if file uploads went OK
+		if($_FILES['key']['error'] || $_FILES['iv']['error'] || $_FILES['data']['error']) 
+		{
+			$this->respondWithError("Error with file upload, file not uploaded"); 
+		}
+
 		$encryptedKey   = file_get_contents($_FILES['key']['tmp_name']);
         $encryptedIV    = file_get_contents($_FILES['iv']['tmp_name']);
 		$encryptedData 	= file_get_contents($_FILES['data']['tmp_name']);
 
 		// Store file on the server before we add references in the db to it.
-		$target_dir 	= "uploads/";
+		$target_dir 	= UPLOAD_PATH;
 		$newFileName 	=  uniqid();
 		$targetFile 	= $target_dir . $newFileName;
 		$fileSize 		= $_FILES['data']['size'];
@@ -47,7 +53,35 @@ class file extends Base
 
 	public function get()
 	{
-		"test123";
+		$id	= filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+		// We need to fetch the file requested + the encrypted key and iv.
+		$user = new \model\User();
+		$file = new \model\File();
+		$fileObj = null;
+
+		try 
+        {
+			$signedInUser = $user->get($_SESSION['username']);
+            $fileObj = $file->get($signedInUser->id, $id);
+        } 
+		catch(\Exception $e) 
+        {
+            $errorMsg = "Database error, please try again later";
+            $this->respondWithError($errorMsg);            
+        }
+
+		// Now we need to read the file from disk, then dump the data of the file!
+		$filePath = UPLOAD_PATH . $fileObj->file_name;
+
+		// TODO Check that this path is actually inside the upload folder.
+		
+		echo file_get_contents($filePath);
+		echo SPLITTER;
+		echo $fileObj->encrypted_key;
+		echo SPLITTER;
+		echo $fileObj->encrypted_iv;
+		
 		die();
 	}
 };

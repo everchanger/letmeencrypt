@@ -1,7 +1,3 @@
-var g_publicBlob = null;
-var g_privateBlob = null;
-var g_privateIVBlob = null;
-
 function OnReady() 
 {
     $('#target_friend').on('change', target_changed);
@@ -16,7 +12,20 @@ function OnReady()
 		readDataFromFileInput(files, encryptUserFile);			
 	});
 
-    loadUserKeys();
+     $('.download_file').on('click',  function() {
+		var file_id = $(this).attr("id");
+        var filename = $(this).attr("name");
+		getFile(file_id, filename);			
+	});
+
+    try{
+        loadUserKeys();
+    }
+    catch(e) 
+    {
+        alert(e);
+    }
+    
 }
 
 function target_changed(evt) 
@@ -54,123 +63,69 @@ async function loadUserKeys()
 
     var request = new XMLHttpRequest();
     request.responseType = 'arraybuffer';
-    request.key = "public";
 
     request.onreadystatechange = function() {
          if(request.readyState === XMLHttpRequest.DONE) {
             if(request.status === 200) {
-                keyLoaded(request);
+                try
+                {
+                    var blobs = parseResponseBlobs(request.response, 3);
+                    loadKeys(blobs[0], blobs[1], blobs[2]);
+                } 
+                catch(e) 
+                {
+                    showError("Failed to load user keys: "+e);
+                }
             } else if(request.status == 500) {
                 showError(request.responseText);
             }
          }
     }
-    request.open("GET", "?controller=user&action=get_public_key", true);
+    request.open("GET", "?controller=user&action=get_binary_data", true);
     request.send();
-
-    var request2 = new XMLHttpRequest();
-    request2.responseType = 'arraybuffer';
-    request2.key = "private";
-
-     request2.onreadystatechange = function() {
-         if(request2.readyState === XMLHttpRequest.DONE) {
-            if(request2.status === 200) {
-                keyLoaded(request2);
-            } else if(request2.status == 500) {
-                showError(request2.responseText);
-            }
-         }
-    }
-    request2.open("GET", "?controller=user&action=get_private_key", true);
-    request2.send();
-
-    var request3 = new XMLHttpRequest();
-    request3.responseType = 'arraybuffer';
-    request3.key = "iv";
-
-     request3.onreadystatechange = function() {
-         if(request3.readyState === XMLHttpRequest.DONE) {
-            if(request3.status === 200) {
-                keyLoaded(request3);
-            } else if(request3.status == 500) {
-                showError(request3.responseText);
-            }
-         }
-    }
-    request3.open("GET", "?controller=user&action=get_private_iv", true);
-    request3.send();
 }
 
-async function keyLoaded(request) 
+async function loadKeys(public_blob, private_blob, private_iv) 
 {
     var username = $('#email').html().trim();
 
-    if(request.responseType != "arraybuffer") {
-        return;
-    }
+    await g_keyStore.open();
 
-    if(request.key == "public") 
-    {
-        g_publicBlob = request.response;
-        var tmp = new Uint8Array(g_publicBlob.byteLength);
-	    tmp.set(new Uint8Array(g_publicBlob), 0);
-        console.log(tmp);
-    } 
-    else if(request.key == "private") 
-    {
-        g_privateBlob = request.response;
-        var tmp = new Uint8Array(g_privateBlob.byteLength);
-	    tmp.set(new Uint8Array(g_privateBlob), 0);
-        console.log(tmp);
-    } 
-    else if(request.key == "iv") 
-    {
-        g_privateIVBlob = request.response;
-        var tmp = new Uint8Array(g_privateIVBlob.byteLength);
-	    tmp.set(new Uint8Array(g_privateIVBlob), 0);
-        console.log(tmp);
-    } 
+    try {
+        var crypto_public_key = await g_Crypt.subtle.importKey("spki", public_blob, {
+            name: 'RSA-OAEP',
+            modulusLength: 2048,
+            publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
+            hash: {name: "SHA-256"}
+            }, true, ["encrypt"]);
 
-    if(g_publicBlob && g_privateBlob && g_privateIVBlob) 
-    {
-        await g_keyStore.open();
+        console.log('public: '+crypto_public_key);
 
-        try {
-            var crypto_public_key = await g_Crypt.subtle.importKey("spki", g_publicBlob, {
-                name: 'RSA-OAEP',
-                modulusLength: 2048,
-                publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
-                hash: {name: "SHA-256"}
-                }, true, ["encrypt"]);
+        var userpassword = localStorage.getItem("userPassword");
 
-            console.log('public: '+crypto_public_key);
+        var decrypted_private_key = await decryptPrivateKey(private_blob, private_iv, userpassword);
 
-            var userpassword = localStorage.getItem("userPassword");
+        // See, I told you, not so shady!
+        localStorage.setItem("userPassword", null);
 
-            var decrypted_private_key = await decryptPrivateKey(g_privateBlob, g_privateIVBlob, userpassword);
+        var crypto_private_key  = await g_Crypt.subtle.importKey("pkcs8", decrypted_private_key, {
+            name: 'RSA-OAEP',
+            modulusLength: 2048,
+            publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
+            hash: {name: "SHA-256"}
+            }, false, ["decrypt"]);
+        
+        console.log('private: '+crypto_public_key);
 
-            // See, I told you, not so shady!
-            localStorage.setItem("userPassword", null);
+        await g_keyStore.storeKey(crypto_public_key, crypto_private_key, username);
 
-            var crypto_private_key  = await g_Crypt.subtle.importKey("pkcs8", decrypted_private_key, {
-                name: 'RSA-OAEP',
-                modulusLength: 2048,
-                publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
-                hash: {name: "SHA-256"}
-                }, false, ["decrypt"]);
-            
-            console.log('private: '+crypto_public_key);
-
-            await g_keyStore.storeKey(crypto_public_key, crypto_private_key, username);
-
-            $('#public_key_loaded').removeClass('glyphicon-remove');
-            $('#public_key_loaded').addClass('glyphicon-ok');
-            $('#private_key_loaded').removeClass('glyphicon-remove');
-            $('#private_key_loaded').addClass('glyphicon-ok');
-            
-        } catch(err) {
-            console.log('Error in keyLoaded: '+err);
-        }
+        $('#public_key_loaded').removeClass('glyphicon-remove');
+        $('#public_key_loaded').addClass('glyphicon-ok');
+        $('#private_key_loaded').removeClass('glyphicon-remove');
+        $('#private_key_loaded').addClass('glyphicon-ok');
+        
+    } catch(err) { 
+        showError('Error in keyLoaded: '+err);
     }
 }
 
@@ -236,17 +191,29 @@ async function encryptUserFile(filedata)
     request.send(formData);
 }
 
-async function decryptUserFile(fileID) 
+async function getFile(fileID, filename) 
 {
     // We need to get the IV, key and the file data, the we can decrypt it all for the user.
     var request = new XMLHttpRequest();
     request.responseType = 'arraybuffer';
 
+    request.filename = filename;
+
     request.onreadystatechange = function() {
          if(request.readyState === XMLHttpRequest.DONE) {
             if(request.status === 200) {
-                var tmp = new Uint8Array(request.response);
-                console.log(tmp);
+                try 
+                {
+                    var blobs = parseResponseBlobs(request.response, 3);
+                    // Time to decrypt! :D
+                    decryptUserData(blobs[2], blobs[1], blobs[0], request.filename);
+                }
+                catch(e) 
+                {
+                    showError("Error while getting file: "+e);
+                }
+                
+
             } else if(request.status == 500) {
                 showError(request.responseText);
             }
@@ -255,4 +222,26 @@ async function decryptUserFile(fileID)
     request.open("GET", "?controller=file&action=get&id="+fileID, true);
     request.send();
 
+}
+
+async function decryptUserData(encryptedIV, encryptedKey, fileData, fileName) 
+{
+    var username = $('#email').html().trim();
+
+      // Get the public key from the user that the file is to be sent to. (For now ourselfs only)
+    await g_keyStore.open();
+
+    var keyPair = await g_keyStore.getKey("name", username);
+
+    const iv = await g_Crypt.subtle.decrypt({name: "RSA-OAEP"}, keyPair.privateKey, encryptedIV);
+    const key = await g_Crypt.subtle.decrypt({name: "RSA-OAEP"}, keyPair.privateKey, encryptedKey);
+		
+	const decKey = await g_Crypt.subtle.importKey('raw', key, {name: "AES-CBC", length: 256}, false, ["decrypt"]);
+	
+	// Decrypt filedata with the bulk key
+    g_Crypt.subtle.decrypt({name: "AES-CBC", iv: iv}, decKey, fileData).then(function(decryptedData) {
+			saveBinaryDataAs(decryptedData, fileName);		
+		}).catch(function(e) {
+            console.log(e); // "oh, no!"
+        });
 }

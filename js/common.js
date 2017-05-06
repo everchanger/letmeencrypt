@@ -21,6 +21,7 @@ $(document).ready(function() {
 		return;
 	}
 
+
 	$('#sign-in-button').on('click', function() {
 		// This is not as shady as it looks, we stored the users password temporary to be able to decrypt the private key!
 		localStorage.setItem("userPassword", $('#user-password').val());
@@ -342,4 +343,65 @@ function str2ab(str) {
     bufView[i] = str.charCodeAt(i);
   }
   return buf;
+}
+
+function findArrayInArray(haystack, needle, startOffset = 0)
+{
+    var foundPos = -1;
+    var matched = 0;
+
+	if(startOffset >= haystack.length || needle.length > haystack.length) 
+	{
+		return -1;
+	}
+
+    for(var i = 0 + startOffset; i< haystack.length; i++)
+    {
+        if(haystack[i] == needle[matched]) 
+        {
+            if(matched == 0) 
+            {
+                foundPos = i;
+            }
+
+            matched++;
+            if(matched == needle.length)
+            {
+                break;
+            }
+        } 
+        else
+		{
+            matched = 0;
+            foundPos = -1;
+        }
+    }
+
+    return foundPos;
+}
+
+function parseResponseBlobs(responseBlob, numberOfBlobs)
+{
+     // We will recieve a blob containing 'sub-blobs'
+    var tmp = new Uint8Array(responseBlob);
+    var blobs = Array();
+                
+    var splitter = new Uint8Array([95,45,124,45,95]);
+
+    var startPos = 0;
+    var pos = 0;
+    for(var i = 0; i < numberOfBlobs-1; ++i) 
+    {
+        var pos = findArrayInArray(tmp, splitter, startPos);
+        if(pos == -1) {
+            throw new Error('No more blob entries found while looking!');
+        }
+
+        blobs.push(tmp.slice(startPos, pos));        
+        startPos = pos+splitter.length
+    }
+
+    blobs.push(tmp.slice(pos+splitter.length));
+
+    return blobs;
 }
