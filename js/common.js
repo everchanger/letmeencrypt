@@ -26,6 +26,28 @@ $(document).ready(function() {
 		// This is not as shady as it looks, we stored the users password temporary to be able to decrypt the private key!
 		localStorage.setItem("userPassword", $('#user-password').val());
 	});
+
+	if($('#friend-search')) {
+		$('#friend-search').typeahead({
+        autoSelect: true,
+        minLength: 2,
+        delay: 400,
+        source: function (query, process) {
+            $.ajax({
+                url: '?controller=user&action=find',
+                data: {query: query},
+                dataType: 'json'
+            })
+			.done(function(response) {
+				return process(response);
+			});
+        },
+		updater: function (item) {
+			window.confirm("Do you want to add "+item.name +" as a friend?");
+			return item;
+		}
+    });
+	}
 		
 	g_keyStore.open().then(function() {
 		

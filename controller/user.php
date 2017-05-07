@@ -144,5 +144,40 @@ class User extends Base
 
          respondWithView("home", array());
     }
+
+    public function find()
+    {
+        $query = filter_input(INPUT_GET, 'query', FILTER_SANITIZE_STRING);
+        $user = new \model\user();
+        $users = array();
+
+		try 
+		{
+			$users = $user->find($query);
+		} 
+		catch(\Exception $e) 
+		{
+            if($e->getCode() != ERROR_CODE_USER_NOT_FOUND) {
+                $errorMsg = "Database error, please try again later: ".$e->getCode();
+                $this->respondWithError($errorMsg);   
+            } 
+		}
+
+        $objects = array();
+        foreach($users as $u) 
+        {
+            if(isset($u->alias)) 
+            {
+                $objects[] = array("name" => ($u->alias . ': ' . $u->email), "id" => $u->id);
+            }
+            else
+            {
+                $objects[] = array("name" => $u->email, "id" => $u->id);
+            }
+            
+        }
+
+        echo json_encode($objects);
+    }
     
 }

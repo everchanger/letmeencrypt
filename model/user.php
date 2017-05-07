@@ -54,4 +54,34 @@ class User
             throw $e;
         } 
     }
+
+    public function find($query)
+    {
+         if(!isset($query)) 
+        {
+            throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
+        }
+
+        try 
+        {
+            $stmt = DB::pdo()->prepare("SELECT id, alias, email FROM users WHERE email LIKE :email_query OR alias LIKE :alias_query");
+            
+            $email_query = "%".$query."%";
+            $alias_query = "%".$query."%";
+            $stmt->bindParam(":email_query", $email_query);
+            $stmt->bindParam(":alias_query", $alias_query);
+
+            $stmt->execute();
+
+            if ($stmt->rowCount() <= 0){
+                throw new \Exception("No user with email: ".$email." found", ERROR_CODE_USER_NOT_FOUND);
+            }
+
+            return $stmt->fetchAll(\PDO::FETCH_OBJ);
+        } 
+        catch (\Exception $e) 
+        {
+            throw $e;
+        } 
+    }
 }

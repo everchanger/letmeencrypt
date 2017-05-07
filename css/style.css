@@ -84,3 +84,16 @@ li
 {
 	color: red;
 }
+
+#navbar-search-btn
+{
+	padding-bottom: 2px;
+}
+
+.ui-autocomplete {
+z-index: 1070;
+}
+
+ul.ui-autocomplete.ui-menu {
+  z-index: 1071;
+}

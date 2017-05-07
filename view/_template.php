@@ -39,6 +39,16 @@
 				</li>
 				<?php endif; ?>
 			  </ul>
+				<?php if(isset($_SESSION['username'])): ?>
+				<form class="navbar-form navbar-left">
+					<div class="form-group input-group">
+						<input id="friend-search" type="text" class="form-control" placeholder="Find a friend" autocomplete="off">
+						<span class="input-group-btn">
+							<button id="navbar-search-btn" class="btn btn-primary" type="button"><span class="glyphicon glyphicon-search"></span></button>
+						</span>
+					</div>
+				</form>
+				<?php endif; ?>
 				
 				<?php if(!isset($_SESSION['username'])): ?>
 				<form class="navbar-form navbar-right" action="?controller=user&action=login" method="POST">
@@ -84,6 +94,7 @@
 		<!-- JAVASCRIPT -->
 		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/bootstrap3-typeahead.min.js"></script>
 		<script type="text/javascript" src="js/crypto.js"></script>
 		<script type="text/javascript" src="js/FileSaver.js"></script>
 		<script type="text/javascript" src="js/keystore.js"></script>
