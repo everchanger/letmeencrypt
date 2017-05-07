@@ -104,7 +104,7 @@ class User extends Base
         $password  	= filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING);
 
 		if(!strlen($email) || !strlen($password)) {
-            respondWithView("home", array("error_msg" => "Please enter a valid email address and a password"));
+            respondWithView("home", $this->userMessage("Please enter a valid email address and a password", USER_MESSAGE_ERROR));
         }
 
 		$user = new \model\user();
@@ -132,7 +132,7 @@ class User extends Base
                 break;
             }
 
-            respondWithView("home", array("error_msg" => $errorMsg));
+            respondWithView("home", $this->userMessage($errorMsg, USER_MESSAGE_ERROR));
 		}
 
 		$this->respondWithController("user");

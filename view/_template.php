@@ -10,7 +10,7 @@
 		<link rel="stylesheet" href="css/style.css">
 	</head>
 	<body>
-		<nav class="navbar navbar-default <?= isset($error_msg) ? 'no-margin' : '' ?>" id='main_navbar'>
+		<nav class="navbar navbar-default no-margin-bottom" id='main_navbar'>
 		  <div class="container-fluid">
 			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">
@@ -73,14 +73,43 @@
 		  </div>
 		</nav>
 		
-		<!-- Error handling -->
-		<div class="col-xs-12 error-field <?=isset($error_msg) ? '' : 'hidden' ?>" id="error_field">
-			<p class="error_message" id="error_message"><?=isset($error_msg) ? $error_msg : '' ?></p>
+		<!-- Message handling -->
+		<?php 
+			$panel_type = "";
+			if(isset($message_to_user)) 
+			{
+				switch($message_to_user->type) 
+				{
+						case USER_MESSAGE_SUCCESS:
+							$panel_type = "panel-success";
+						break;
+						case USER_MESSAGE_WARNING:
+							$panel_type = "panel-warning";
+						break;
+						case USER_MESSAGE_ERROR:
+							$panel_type = "panel-danger";
+						break;
+				}
+			}
+		?>
+
+		<div class="panel no-margin-bottom <?=$panel_type?> <?=isset($message_to_user) ? '' : 'hidden-elm' ?>" id="message_field">
+			<div class="panel-heading">
+				<div id="user_message">
+				<?=isset($message_to_user) ? $message_to_user->message : '' ?>
+				</div>
+				<span id="close-message-btn" class="pull-right glyphicon glyphicon-remove clickable"></span>
+			</div>
 		</div>
 		
 		<!-- Loading bar under main navbar, please fix! -->
 
-		<div class="container-fluid">
+		<div class="container-fluid" id="loading">
+				<div id="loading-bar">
+				</div>
+		</div>
+
+		<div class="container-fluid" id="content">
 			<!-- INCLUDE THE SELECTED VIEW! -->
 			<?php include $view_file_name;?>
 		</div>

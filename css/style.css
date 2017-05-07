@@ -12,7 +12,7 @@ li
 	list-style: none;
 }
 
-.no-margin
+.no-margin-bottom
  {
 	margin: 0;
 }
@@ -47,26 +47,9 @@ li
 	padding: 0;	
 }
 
-.hidden 
+.hidden-elm 
 {
 	display: none;
-}
-
-.error_message
-{
-	color: #D92727;	
-}
-
-.error-field 
-{
-	background-color: #272727;
-	margin-bottom: 21px;
-}
-
-.error-field p
- {
-	margin: 5px 0;
-	font-size: 13px;
 }
 
 #sign-in-button 
@@ -90,10 +73,48 @@ li
 	padding-bottom: 2px;
 }
 
-.ui-autocomplete {
-z-index: 1070;
+.panel-heading span
+{
+    margin-top: -26px;
+    font-size: 15px;
+    
 }
 
-ul.ui-autocomplete.ui-menu {
-  z-index: 1071;
+#message_field
+{
+	overflow: hidden;
+}
+
+.clickable 
+{
+    background: rgba(0, 0, 0, 0.15);
+    display: inline-block;
+    padding: 8px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#close-message-btn
+{
+	 color: inherit; 
+	 display: inline-block;
+} 
+
+#content
+{
+	margin-top: 21px;
+}
+
+#loading
+{
+	padding: 0;
+	height: 5px;
+	width: 100%;
+}
+
+#loading-bar
+{
+	background-color: orange;
+	height: 5px;
+	width: 0%;
 }

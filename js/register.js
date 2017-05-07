@@ -6,34 +6,63 @@ function OnReady()
 async function handleRegistration(evt) {
     evt.preventDefault();
 
+    startLoading();
+
     // Generate a keypair, export the public and private key to a format we can POST then submit the form with the keypair.
     var user_email = $('#register_email').val();
     var pairName = user_email;
-    var keyPair = await generateKeyPair(pairName);
-	if(keyPair == null) {
-        return "Error";
+    try
+    {
+        var keyPair = await generateKeyPair(pairName);
+        loading(25);
     }
-
+    catch(e)
+    {
+        showError("Failed to generate a keypair: "+e);
+        endLoading();
+        return;
+    }
+    
     var password    = $('#register_password1').val();
     var password2   = $('#register_password2').val(); 
 
     if(password != password2) {
-        return "Error";
+        showError("Passwords doesn't match");
+        endLoading();
+        return;
     }
 
     localStorage.setItem("userPassword", password);
 
-    var public_key = await g_Crypt.subtle.exportKey("spki", keyPair.publicKey);
-    var public_blob = new Blob([public_key], {type: "application/octet-stream"});
-   
-    var private_key =  await g_Crypt.subtle.exportKey("pkcs8", keyPair.privateKey);
-    var encryptedOutput = await encryptPrivateKey(private_key, password);
+    try
+    {
+        var public_key = await g_Crypt.subtle.exportKey("spki", keyPair.publicKey);
+        var public_blob = new Blob([public_key], {type: "application/octet-stream"});
 
-    var private_blob = new Blob([encryptedOutput.encryptedKey], {type: "application/octet-stream"});
-    var iv_blob = new Blob([encryptedOutput.IV], {type: "application/octet-stream"});
+        loading(15);
+    
+        var private_key =  await g_Crypt.subtle.exportKey("pkcs8", keyPair.privateKey);
+
+        loading(15);
+
+        var encryptedOutput = await encryptPrivateKey(private_key, password);
+
+        loading(25);
+
+        var private_blob = new Blob([encryptedOutput.encryptedKey], {type: "application/octet-stream"});
+        var iv_blob = new Blob([encryptedOutput.IV], {type: "application/octet-stream"});
+    }
+    catch(e)
+    {
+        showError("Failed to generate a keypair: "+e);
+        endLoading();
+        return;
+    }
+    
+    loading(10);
 
     // Let the user decide if he/she wants to download a copy of the private key.
-    saveBinaryDataAs(private_key, user_email.substring(0, user_email.indexOf('@'))+'.private_key');
+    // saveBinaryDataAs(private_key, user_email.substring(0, user_email.indexOf('@'))+'.private_key');
    
     var formData = new FormData();
     formData.append("email", user_email);
@@ -50,15 +79,20 @@ async function handleRegistration(evt) {
     request.onreadystatechange = function() {
          if(request.readyState === XMLHttpRequest.DONE) {
             if(request.status === 200) {
+                endLoading();
                 window.location = "?controller=user&action=show";
             } else if(request.status == 500) {
                 showError(request.responseText);
+                endLoading();
+                return;
             }
          }
     }
 
     request.open($('#register').attr('method'), $('#register').attr('action'), true);
     request.send(formData);
+
+    loading(5);
 }
 
 async function generateKeyPair(pairName) 

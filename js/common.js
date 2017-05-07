@@ -17,7 +17,7 @@ $(document).ready(function() {
 	} 
 	catch(e) 
 	{
-		alert("Your browser is missing functionallity to run this page correctly");
+		showError("Your browser is missing functionallity to run this page correctly");
 		return;
 	}
 
@@ -26,6 +26,8 @@ $(document).ready(function() {
 		// This is not as shady as it looks, we stored the users password temporary to be able to decrypt the private key!
 		localStorage.setItem("userPassword", $('#user-password').val());
 	});
+
+	$('#close-message-btn').on('click', closeMessage);
 
 	if($('#friend-search')) {
 		$('#friend-search').typeahead({
@@ -108,10 +110,62 @@ $(document).ready(function() {
 	}	
 });
 
-function showError(errorText) {
-	$('#main_navbar').addClass('no-margin');
-	$('#error_field').removeClass('hidden');
-	$('#error_message').text(errorText);
+function showSuccess(successText) 
+{
+	showMessage(successText, 'panel-success');
+}
+
+function showError(errorText) 
+{
+	showMessage(errorText, 'panel-danger');
+}
+
+function showWarning(warningText)
+{
+	showMessage(warningText, 'panel-warning');
+}
+
+function showMessage(message, panelType) 
+{
+	if(message.length > 128)
+	{
+		message = message.substr(0, 125);
+		message += '...';
+	}
+
+	$('#message_field').removeClass('panel-success');
+	$('#message_field').removeClass('panel-warning');
+	$('#message_field').removeClass('panel-danger');
+
+	$('#message_field').addClass(panelType);
+
+	$("html, body").animate({ scrollTop: 0 }, "fast");
+	$('#message_field').slideDown(400, function(){
+		$('#user_message').text(message);
+		console.log(message);
+	});
+}
+
+function startLoading()
+{
+	$('#loading-bar').width("1%");
+}
+
+function loading(progress)
+{
+	var percentages_done = $('#loading-bar').width()  / $('#loading-bar').parent().width() * 100;;
+	$('#loading-bar').width(percentages_done + progress + "%");
+}
+
+function endLoading()
+{
+	$('#loading-bar').width("0%");
+}
+
+function closeMessage()
+{
+	$('#message_field').slideUp(400, function(){	
+	});
 }
 
 function compabilityCheck() 

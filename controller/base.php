@@ -36,6 +36,15 @@ class Base
 		
 		$this->redirect($request);
 	}
+
+	protected function userMessage($message, $message_type)
+	{
+		$user_message = new \stdClass();
+		$user_message->type 	= $message_type;
+		$user_message->message 	= $message;
+
+		return array("message_to_user" => $user_message);
+	}
 };
 
 ?>
