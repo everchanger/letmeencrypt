@@ -1,4 +1,4 @@
-function OnReady() 
+$(document).ready(function()
 {
     $('#target_friend').on('change', target_changed);
     $('#target_me').on('change', target_changed);
@@ -26,7 +26,7 @@ function OnReady()
         alert(e);
     }
     
-}
+});
 
 function target_changed(evt) 
 {
@@ -195,7 +195,10 @@ async function encryptUserFile(filedata)
     request.onreadystatechange = function() {
          if(request.readyState === XMLHttpRequest.DONE) {
             if(request.status === 200) {
-                window.location = "?controller=user&action=show";
+                loading(5);
+                showSuccess("Encrypted file uploaded");
+                endLoading();
+                //window.location = "?controller=user&action=show&user_message=File upload";
             } else if(request.status == 500) {
                 showError(request.responseText);
                 endLoading();
@@ -219,7 +222,7 @@ async function getFile(fileID, filename)
 
     request.filename = filename;
 
-    request.onreadystatechange = function() {
+    request.onreadystatechange = async function() {
          if(request.readyState === XMLHttpRequest.DONE) {
             if(request.status === 200) {
                 try 
@@ -227,7 +230,8 @@ async function getFile(fileID, filename)
                     var blobs = parseResponseBlobs(request.response, 3);
                     loading(20);
                     // Time to decrypt! :D
-                    decryptUserData(blobs[2], blobs[1], blobs[0], request.filename);
+                    await decryptUserData(blobs[2], blobs[1], blobs[0], request.filename);
+                    endLoading();
                 }
                 catch(e) 
                 {
@@ -269,10 +273,10 @@ async function decryptUserData(encryptedIV, encryptedKey, fileData, fileName)
 
 	// Decrypt filedata with the bulk key
     g_Crypt.subtle.decrypt({name: "AES-CBC", iv: iv}, decKey, fileData).then(function(decryptedData) {
-			saveBinaryDataAs(decryptedData, fileName);	
-            loading(10);	
-		}).catch(function(e) {
-            endLoading();
-            console.log(e); // "oh, no!"
-        });
+        saveBinaryDataAs(decryptedData, fileName);	
+        loading(10);	
+    }).catch(function(e) {
+        endLoading();
+        console.log(e); // "oh, no!"
+    });
 }

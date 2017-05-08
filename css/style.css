@@ -107,14 +107,80 @@ li
 
 #loading
 {
-	padding: 0;
+	position: relative;
+    overflow: hidden;
 	height: 5px;
-	width: 100%;
+	width:0%;
 }
 
 #loading-bar
 {
-	background-color: orange;
+	position: absolute;
+    left: -46px;
+    right: 0;
+    top: 0;
+    bottom: 0;
+	
+  background: -webkit-repeating-linear-gradient(
+    145deg,
+    #008cba 1px,
+    #5ab4d2 2px,
+    #5ab4d2 11px,
+    #008cba 12px,
+    #008cba 20px
+  );
+  background: repeating-linear-gradient(
+    -55deg,
+    #008cba 1px,
+    #5ab4d2 2px,
+    #5ab4d2 11px,
+    #008cba 12px,
+    #008cba 20px
+	);
+    
+    -webkit-animation-name: MOVE-BG;
+	-webkit-animation-duration: 1s;
+	-webkit-animation-timing-function: linear;
+	-webkit-animation-iteration-count: infinite;
+	
+    animation-name: MOVE-BG;
+	animation-duration: 1s;
+	animation-timing-function: linear;
+	animation-iteration-count: infinite;
+
 	height: 5px;
-	width: 0%;
+}
+
+@-webkit-keyframes MOVE-BG {
+	from {
+		-webkit-transform: translateX(0);
+	}
+	to { 
+		-webkit-transform: translateX(46px);
+	}
+}
+
+@keyframes MOVE-BG {
+	from {
+		transform: translateX(0);
+	}
+	to { 
+		transform: translateX(46px);
+	}
+}
+
+.paused {
+   -ms-animation-play-state:paused;
+   -o-animation-play-state:paused;
+   -moz-animation-play-state:paused;
+   -webkit-animation-play-state:paused;
+  animation-play-state: paused;
+}
+
+.running {
+   -ms-animation-play-state:running;
+   -o-animation-play-state:running;
+   -moz-animation-play-state:running;
+   -webkit-animation-play-state:running;
+  animation-play-state: running;
 }

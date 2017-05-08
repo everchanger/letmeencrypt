@@ -10,6 +10,8 @@
 		<link rel="stylesheet" href="css/style.css">
 	</head>
 	<body>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
 		<nav class="navbar navbar-default no-margin-bottom" id='main_navbar'>
 		  <div class="container-fluid">
 			<!-- Brand and toggle get grouped for better mobile display -->
@@ -93,7 +95,14 @@
 			}
 		?>
 
-		<div class="panel no-margin-bottom <?=$panel_type?> <?=isset($message_to_user) ? '' : 'hidden-elm' ?>" id="message_field">
+		<!-- Loading bar under main navbar, please fix! -->
+
+		<div id="loading">
+				<div id="loading-bar">
+				</div>
+		</div>
+
+		<div class="panel no-margin-bottom <?=$panel_type?> hidden-elm" id="message_field">
 			<div class="panel-heading">
 				<div id="user_message">
 				<?=isset($message_to_user) ? $message_to_user->message : '' ?>
@@ -102,13 +111,6 @@
 			</div>
 		</div>
 		
-		<!-- Loading bar under main navbar, please fix! -->
-
-		<div class="container-fluid" id="loading">
-				<div id="loading-bar">
-				</div>
-		</div>
-
 		<div class="container-fluid" id="content">
 			<!-- INCLUDE THE SELECTED VIEW! -->
 			<?php include $view_file_name;?>
@@ -121,12 +123,12 @@
 		</footer>-->	
 
 		<!-- JAVASCRIPT -->
-		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="js/bootstrap3-typeahead.min.js"></script>
 		<script type="text/javascript" src="js/crypto.js"></script>
 		<script type="text/javascript" src="js/FileSaver.js"></script>
 		<script type="text/javascript" src="js/keystore.js"></script>
 		<script type="text/javascript" src="js/common.js"></script>
+		<script type="text/javascript" src="js/messages.js"></script>
 	</body>
 </html>

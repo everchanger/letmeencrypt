@@ -1,7 +1,7 @@
-function OnReady() 
+$(document).ready(function() 
 {
     $('#register').on('submit', handleRegistration);
-}
+});
 
 async function handleRegistration(evt) {
     evt.preventDefault();
