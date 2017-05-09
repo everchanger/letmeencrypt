@@ -6,16 +6,18 @@
 				<p class="help-block">View the current status of your keys.</p>
 				<p>Public key:  <span class="glyphicon key_status glyphicon-remove" id="public_key_loaded"></span></p>
 				<p>Private key: <span class="glyphicon key_status glyphicon-remove" id="private_key_loaded"></span></p>
-				<h4>Load private key</h4>
-				<div class="input-group">
-					<label for="private_key" class="input-group-btn">
-						<span class="btn btn-primary">Browse
-							<input type="file" id="private_key" accept="privateKey" onchange="readKeyFromInput(this.files)" class="hidden">
-						</span>
-					</label>
-					<input type="text" class="form-control" readonly="">
+				<div class="hidden-elm">
+					<h4>Load private key</h4>
+					<div class="input-group">
+						<label for="private_key" class="input-group-btn">
+							<span class="btn btn-primary">Browse
+								<input type="file" id="private_key" accept="privateKey" onchange="readKeyFromInput(this.files)" class="hidden">
+							</span>
+						</label>
+						<input type="text" class="form-control" readonly="">
+					</div>
+					<p class="help-block">Your private key will not be submited to the server only used localy by javascript to decrypt your files for you.</p>->
 				</div>
-				<p class="help-block">Your private key will not be submited to the server only used localy by javascript to decrypt your files for you.</p>
 			</div>
 		</div>
 		<div class="col-xs-6">
@@ -32,17 +34,19 @@
 					<input type="text" id="file_name" class="form-control" readonly="">
 				</div>
 				<p class="help-block">The file will not be submitted until encryption has been applied.</p>
-				<div class="form-group">
-					<input type="radio" id="target_friend" name="reciever" value="friend" checked> Friend
-					<input type="radio" id="target_me" name="reciever" value="myself"> Myself
-					<p class="help-block">Chose who the reciever of the file is.</p>
-				</div>
-				<div class="form-group">
-					<select class="form-control" id="friend_list">
-						<?php foreach($friends as $friend): ?>
-						<option value="<?=$friend?>"><?=$friend?></option>
-						<?php endforeach ?>
-					</select>
+				<div class="hidden-elm">
+					<div class="form-group">
+						<input type="radio" id="target_friend" name="reciever" value="friend" checked> Friend
+						<input type="radio" id="target_me" name="reciever" value="myself"> Myself
+						<p class="help-block">Chose who the reciever of the file is.</p>
+					</div>
+					<div class="form-group">
+						<select class="form-control" id="friend_list">
+							<?php foreach($friends as $friend): ?>
+							<option value="<?=$friend?>"><?=$friend?></option>
+							<?php endforeach ?>
+						</select>
+					</div>
 				</div>
 				<div class="form-group">
 					<button class="btn btn-primary" id="encrypt" disabled>Encrypt and upload!</button>

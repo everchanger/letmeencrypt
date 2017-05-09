@@ -42,7 +42,7 @@ $(document).ready(function() {
 			});
         },
 		updater: function (item) {
-			window.confirm("Do you want to add "+item.name +" as a friend?");
+			window.location = '?controller=user&action=profile&id='+item.id;
 			return item;
 		}
     });

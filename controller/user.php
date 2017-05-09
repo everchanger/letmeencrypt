@@ -32,6 +32,26 @@ class User extends Base
         respondWithView("user", array("user" => $signedInUser, "files" => $files, "friends" => $friends));
     }
 
+    public function profile()
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+
+        $user = new \model\User();
+        try 
+        {
+            $userProfile = $user->getProfile($id);
+        }
+        catch(\Exception $e)
+        {
+            if(intval($e->getCode()) != ERROR_CODE_NO_ENCRYPTED_FILES)
+            {
+                $this->respondWithError("Database error, please try again later".$e->getCode()); 
+            }
+        }
+
+        respondWithView("profile", array("user" => $userProfile));
+    }
+
     public function get_binary_data() 
     {
         $user = new \model\User();
