@@ -39,17 +39,62 @@ class User extends Base
         $user = new \model\User();
         try 
         {
-            $userProfile = $user->getProfile($id);
+            $signedInUser = $user->get($_SESSION['username']);
+            $userProfile = $user->getProfile($signedInUser->id, $id);
         }
         catch(\Exception $e)
         {
             if(intval($e->getCode()) != ERROR_CODE_NO_ENCRYPTED_FILES)
             {
-                $this->respondWithError("Database error, please try again later".$e->getCode()); 
+                $this->respondWithError("Database error, please try again later ".$e->getCode()); 
             }
         }
 
         respondWithView("profile", array("user" => $userProfile));
+    }
+
+    public function addFriend()
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+
+        $user = new \model\User();
+        $friend = new \model\Friend();
+
+        try 
+        {
+            $signedInUser = $user->get($_SESSION['username']);
+            $friend->addFriendRequest($signedInUser->id, $id);
+        }
+        catch(\Exception $e)
+        {
+            if(intval($e->getCode()) == ERROR_CODE_ALLREADY_FRIEND) {
+                $this->respondWithError($e->getMessage()); 
+            }
+
+            $this->respondWithError("Database error, please try again later ".$e->getCode()); 
+        }
+
+        $this->respondWithController("user", "profile", array("id" => $id));
+    }
+
+    public function acceptFriend()
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+
+        $user = new \model\User();
+        $friend = new \model\Friend();
+
+        try 
+        {
+            $signedInUser = $user->get($_SESSION['username']);
+            $friend->acceptFriendRequest($signedInUser->id, $id);
+        }
+        catch(\Exception $e)
+        {
+            $this->respondWithError("Database error, please try again later ".$e->getCode()); 
+        }
+
+        $this->respondWithController("user", "profile", array("id" => $id));
     }
 
     public function get_binary_data() 
@@ -110,6 +155,7 @@ class User extends Base
                 default:
                 break;
             }
+            var_dump($e);die();
             $this->respondWithError($errorMsg);            
         }
 
@@ -186,6 +232,11 @@ class User extends Base
         $objects = array();
         foreach($users as $u) 
         {
+            if($u->email == $_SESSION['username'])
+            {
+                continue;
+            }
+
             if(isset($u->alias)) 
             {
                 $objects[] = array("name" => ($u->alias . ': ' . $u->email), "id" => $u->id);

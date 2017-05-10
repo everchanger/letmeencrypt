@@ -13,7 +13,7 @@ class User
 
         try 
         {
-            $stmt = DB::pdo()->prepare("INSERT INTO users (id, email, pwd_hash, public_key, private_key, private_iv) VALUES (:email, :pwd_hash, :public_key, :private_key, :private_iv)");
+            $stmt = DB::pdo()->prepare("INSERT INTO users (email, pwd_hash, public_key, private_key, private_iv) VALUES (:email, :pwd_hash, :public_key, :private_key, :private_iv)");
             
             $stmt->bindParam(":email", $email);
             $stmt->bindParam(":pwd_hash", $password_hash);
@@ -57,35 +57,9 @@ class User
         } 
     }
 
-    public function getProfile($id) {
-        if(!isset($id)) 
-        {
-            throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
-        }
-
-        try 
-        {
-            $stmt = DB::pdo()->prepare("SELECT id, email, alias, pwd_hash, public_key FROM users WHERE id = :id");
-            
-            $stmt->bindParam(":id", $id);
-
-            $stmt->execute();
-
-            if ($stmt->rowCount() <= 0){
-                throw new \Exception("No user with id: ".$id." found", ERROR_CODE_USER_NOT_FOUND);
-            }
-
-            return $stmt->fetch(\PDO::FETCH_OBJ);
-        } 
-        catch (\Exception $e) 
-        {
-            throw $e;
-        } 
-    }
-
     public function find($query)
     {
-         if(!isset($query)) 
+        if(!isset($query)) 
         {
             throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
         }
@@ -111,5 +85,52 @@ class User
         {
             throw $e;
         } 
+    }
+
+    public function getProfile($loggedOnUserId, $id) 
+    {
+        if(!isset($id) || !isset($loggedOnUserId)) 
+        {
+            throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
+        }
+
+        $profile = null;
+
+        try 
+        {
+            $stmt = DB::pdo()->prepare("SELECT id, email, alias, public_key FROM users WHERE id = :id");
+            
+            $stmt->bindParam(":id", $id);
+
+            $stmt->execute();
+
+            if ($stmt->rowCount() <= 0){
+                throw new \Exception("No user with id: ".$id." found", ERROR_CODE_USER_NOT_FOUND);
+            }
+
+            $profile = $stmt->fetch(\PDO::FETCH_OBJ);
+        } 
+        catch (\Exception $e) 
+        {
+            throw $e;
+        } 
+
+        $friend = new \model\Friend();
+        $friendship = new \model\UserFriend();
+
+        try 
+        {
+            $friendship = $friend->get($loggedOnUserId, $id);
+        }
+        catch(\Exception $e)
+        {
+            if(intval($e->getCode()) != ERROR_CODE_FRIENDSHIP_NOT_FOUND) {
+                throw $e;
+            }
+        }
+
+        $profile->friend = $friendship;
+
+        return $profile;
     }
 }

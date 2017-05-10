@@ -97,7 +97,7 @@
 
 		<!-- Loading bar under main navbar, please fix! -->
 
-		<div id="loading">
+		<div id="loading" class="hidden-elm">
 				<div id="loading-bar">
 				</div>
 		</div>
