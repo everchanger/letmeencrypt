@@ -8,6 +8,12 @@ class file extends Base
 	{
 		$recievers  	= filter_input(INPUT_POST, 'recievers', FILTER_SANITIZE_STRING);
 		$filename  		= filter_input(INPUT_POST, 'filename', FILTER_SANITIZE_STRING);
+		$mimetype  		= filter_input(INPUT_POST, 'type', FILTER_SANITIZE_STRING);
+
+		if($mimetype == null || strlen($mimetype) <= 0)
+		{
+			$mimetype = 'unknown/unknown';
+		}
 
 		// Check if file uploads went OK
 		if($_FILES['key']['error'] || $_FILES['iv']['error'] || $_FILES['data']['error']) 
@@ -27,13 +33,21 @@ class file extends Base
 
 		move_uploaded_file($_FILES['data']['tmp_name'], $targetFile);
 
+		// Extract extension from string
+        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+
+		if($extension == null || strlen($extension) <= 0)
+		{
+			$extension = 'unknown';
+		}
+		
 		$user = new \model\User();
 		$file = new \model\File();
 
 		try 
         {
-			$signedInUser = $user->get($_SESSION['username']);
-            $file->addEncryptedFile($newFileName, $filename, $fileSize, $encryptedIV, $encryptedKey, $signedInUser->id, $signedInUser->id);
+			$signedInUser = $user->get($_SESSION['signed_in_user_id']);
+            $file->addEncryptedFile($newFileName, $filename, $fileSize, $extension, $mimetype, $encryptedIV, $encryptedKey, $signedInUser->id, $signedInUser->id);
         } 
         catch(\Exception $e) 
         {
@@ -62,7 +76,7 @@ class file extends Base
 
 		try 
         {
-			$signedInUser = $user->get($_SESSION['username']);
+			$signedInUser = $user->get($_SESSION['signed_in_user_id']);
             $fileObj = $file->get($signedInUser->id, $id);
         } 
 		catch(\Exception $e) 

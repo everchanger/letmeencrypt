@@ -10,7 +10,7 @@
 	$control = "home";
 	$action  = "show";
 	
-	if(isset($_SESSION['username']))
+	if(isset($_SESSION['signed_in_user_id']))
 	{
 		$control = "user";
 	}

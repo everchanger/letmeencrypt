@@ -2,6 +2,18 @@
 
 namespace controller;
 
+class lameFriend 
+{
+    public function  __construct($n, $i) 
+    {
+        $this->name = $n;
+        $this->id = $i;
+    }
+
+    public $name;
+    public $id;
+}
+
 class User extends Base
 {
     public function show() 
@@ -13,7 +25,7 @@ class User extends Base
 
         try 
         {
-            $signedInUser = $user->get($_SESSION['username']);
+            $signedInUser = $user->get($_SESSION['signed_in_user_id']);
             $files = $file->get_users_files($signedInUser->id);
         } 
         catch(\Exception $e)
@@ -25,9 +37,9 @@ class User extends Base
         }
 
         $friends   = array(); 
-        $friends[] = "tasty@stuff.com";
-        $friends[] = "nasty@jet.com";
-        $friends[] = "zasty@shuffle.com";
+        $friends[] = new lameFriend("tasty@stuff.com", 0);
+        $friends[] = new lameFriend("nasty@jet.com", 1);
+        $friends[] = new lameFriend("zasty@shuffle.com", 2);
 
         respondWithView("user", array("user" => $signedInUser, "files" => $files, "friends" => $friends));
     }
@@ -39,8 +51,7 @@ class User extends Base
         $user = new \model\User();
         try 
         {
-            $signedInUser = $user->get($_SESSION['username']);
-            $userProfile = $user->getProfile($signedInUser->id, $id);
+            $userProfile = $user->getProfile($_SESSION['signed_in_user_id'], $id);
         }
         catch(\Exception $e)
         {
@@ -53,55 +64,11 @@ class User extends Base
         respondWithView("profile", array("user" => $userProfile));
     }
 
-    public function addFriend()
-    {
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
-
-        $user = new \model\User();
-        $friend = new \model\Friend();
-
-        try 
-        {
-            $signedInUser = $user->get($_SESSION['username']);
-            $friend->addFriendRequest($signedInUser->id, $id);
-        }
-        catch(\Exception $e)
-        {
-            if(intval($e->getCode()) == ERROR_CODE_ALLREADY_FRIEND) {
-                $this->respondWithError($e->getMessage()); 
-            }
-
-            $this->respondWithError("Database error, please try again later ".$e->getCode()); 
-        }
-
-        $this->respondWithController("user", "profile", array("id" => $id));
-    }
-
-    public function acceptFriend()
-    {
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
-
-        $user = new \model\User();
-        $friend = new \model\Friend();
-
-        try 
-        {
-            $signedInUser = $user->get($_SESSION['username']);
-            $friend->acceptFriendRequest($signedInUser->id, $id);
-        }
-        catch(\Exception $e)
-        {
-            $this->respondWithError("Database error, please try again later ".$e->getCode()); 
-        }
-
-        $this->respondWithController("user", "profile", array("id" => $id));
-    }
-
     public function get_binary_data() 
     {
         $user = new \model\User();
 
-        $signedInUser = $user->get($_SESSION['username']);    
+        $signedInUser = $user->get($_SESSION['signed_in_user_id']);    
 
         echo $signedInUser->public_key;
         echo SPLITTER;
@@ -109,6 +76,30 @@ class User extends Base
         echo SPLITTER;
         echo $signedInUser->private_iv;
         die();
+    }
+
+    public function get_public_key() 
+    {
+        $user = new \model\User();
+
+        $friend_ids = filter_input(INPUT_GET, 'friend_ids', FILTER_SANITIZE_STRING, FILTER_REQUIRE_ARRAY);
+        $friend_blobs = array();
+
+        $first = true;
+        foreach($friend_ids as $friend_id) 
+        {
+            if($first)
+            {
+                $first = false;
+            }
+            else 
+            {
+                echo SPLITTER;
+            }
+
+            $friend = $user->get(intval($friend_id));
+            echo $friend->public_key;
+        }
     }
 
     public function test() 
@@ -143,7 +134,7 @@ class User extends Base
 
         try 
         {
-            $user->addUser($email, $password_hash, $public_key, $private_key, $private_iv);
+            $user_id = $user->addUser($email, $password_hash, $public_key, $private_key, $private_iv);
         } 
         catch(\Exception $e) 
         {
@@ -155,11 +146,10 @@ class User extends Base
                 default:
                 break;
             }
-            var_dump($e);die();
             $this->respondWithError($errorMsg);            
         }
 
-        $_SESSION['username'] = $email;
+        $_SESSION['signed_in_user_id'] = intval($user_id);
 
         respondWithStatus();
     }
@@ -183,7 +173,7 @@ class User extends Base
                 throw new \Exception("Wrong password", ERROR_CODE_WRONG_PASSWORD);
             }
 
-            $_SESSION['username'] = $current_user->email;
+            $_SESSION['signed_in_user_id'] = intval($current_user->id);
 		} 
 		catch(\Exception $e) 
 		{
@@ -206,7 +196,7 @@ class User extends Base
 
     public function logout() 
     {
-         unset($_SESSION['username']);
+         unset($_SESSION['signed_in_user_id']);
 
          respondWithView("home", array());
     }
@@ -232,7 +222,7 @@ class User extends Base
         $objects = array();
         foreach($users as $u) 
         {
-            if($u->email == $_SESSION['username'])
+            if($u->id == $_SESSION['signed_in_user_id'])
             {
                 continue;
             }
@@ -250,5 +240,46 @@ class User extends Base
 
         echo json_encode($objects);
     }
-    
+
+    public function addFriend()
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+
+        $user = new \model\User();
+        $friend = new \model\Friend();
+
+        try 
+        {
+            $friend->addFriendRequest($_SESSION['signed_in_user_id'], $id);
+        }
+        catch(\Exception $e)
+        {
+            if(intval($e->getCode()) == ERROR_CODE_ALLREADY_FRIEND) {
+                $this->respondWithError($e->getMessage()); 
+            }
+
+            $this->respondWithError("Database error, please try again later ".$e->getCode()); 
+        }
+
+        $this->respondWithController("user", "profile", array("id" => $id));
+    }
+
+    public function acceptFriend()
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+
+        $user = new \model\User();
+        $friend = new \model\Friend();
+
+        try 
+        {
+            $friend->acceptFriendRequest($_SESSION['signed_in_user_id'], $id);
+        }
+        catch(\Exception $e)
+        {
+            $this->respondWithError("Database error, please try again later ".$e->getCode()); 
+        }
+
+        $this->respondWithController("user", "profile", array("id" => $id));
+    }
 }

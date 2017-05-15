@@ -1,3 +1,8 @@
+.container-fluid
+{
+	max-width:1500px;
+}
+
 footer
 {
     position: fixed;
@@ -183,4 +188,91 @@ li
    -moz-animation-play-state:running;
    -webkit-animation-play-state:running;
   animation-play-state: running;
+}
+
+.bootstrap-select>.dropdown-toggle.bs-placeholder
+{
+	color: white !important;
+}
+
+.bootstrap-select>.dropdown-toggle.bs-placeholder:hover {
+    color: white !important;
+}
+
+.test {
+	background: red !important;
+}
+
+.filebox
+{
+	border: 2px solid #b1cfda;
+	box-shadow: 2px 2px 5px #AAA;
+	border-radius: 10px;
+	overflow: hidden;
+	margin-top: 10px; 
+	font-size: 17px;
+}
+
+.filebox-header
+{
+	background-color: #d7edf5;
+	height: 4em;
+	padding: 7px;
+	color: #6d8b96;
+}
+
+.filebox-header .col-xs-2, .col-xs-10
+{
+	padding: 0;
+}
+
+.filebox-filetype
+{
+	font-size: 2em;
+	color: #b1cfda;
+	margin-top: 6px;
+}
+
+.filebox-preview
+{
+	background-color: #effbff;
+	height: 4em;
+	padding: 7px;
+	color: #6d8b96;
+}
+
+.filebox-preview .col-xs-2, .col-xs-9, .col-xs-12
+{
+	padding: 0;
+}
+
+.filebox-preview .col-xs-9
+{
+	margin: 0 16px 0 0;
+}
+
+.filebox-download-holder
+{
+	height: 23px;
+}
+
+.filebox-download
+{
+	font-size: 3em;
+	color: #6d8b96;
+}
+
+.filebox-download:hover
+{
+	color: #acd8e8;
+}
+
+.filebox-more-info
+{
+	margin-top: 10px;
+}
+
+.filebox-body
+{
+
 }

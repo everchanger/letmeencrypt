@@ -31,22 +31,34 @@ class User
         return DB::pdo()->lastInsertId();
     }
 
-    public function get($email) {
-        if(!isset($email)) 
+    // This functions gets a user either from an id or an mail, if the id isn't an int we do email lookup.
+    public function get($id) {
+        if(!isset($id)) 
         {
             throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
         }
 
         try 
         {
-            $stmt = DB::pdo()->prepare("SELECT id, email, alias, pwd_hash, public_key, private_key, private_iv FROM users WHERE email = :email");
-            
-            $stmt->bindParam(":email", $email);
+            $stmt = null;
 
+            if(is_int($id)) 
+            {
+                // Select on id
+                $stmt = DB::pdo()->prepare("SELECT id, email, alias, pwd_hash, public_key, private_key, private_iv FROM users WHERE id = :id");
+                $stmt->bindParam(":id", $id);
+            }
+            else 
+            {
+                // Select on email
+                $stmt = DB::pdo()->prepare("SELECT id, email, alias, pwd_hash, public_key, private_key, private_iv FROM users WHERE email = :email");
+                $stmt->bindParam(":email", $id);
+            }
+            
             $stmt->execute();
 
             if ($stmt->rowCount() <= 0){
-                throw new \Exception("No user with email: ".$email." found", ERROR_CODE_USER_NOT_FOUND);
+                throw new \Exception("No user with id: ".$id." found", ERROR_CODE_USER_NOT_FOUND);
             }
 
             return $stmt->fetch(\PDO::FETCH_OBJ);

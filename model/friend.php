@@ -138,8 +138,6 @@ class Friend
         }
         catch(\Exception $e)
         {
-            var_dump($e);
-            die();
             throw $e;
         }
     }

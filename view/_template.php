@@ -7,6 +7,7 @@
 		<!-- CSS -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 		<link rel="stylesheet" href="css/bootstrap-yeti-min.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css">
 		<link rel="stylesheet" href="css/style.css">
 	</head>
 	<body>
@@ -22,13 +23,13 @@
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			  </button>
-			  <a class="navbar-brand" href="?controller=<?= isset($_SESSION['username']) ? 'user' : 'home' ?>">Let me encrypt </a>
+			  <a class="navbar-brand" href="?controller=<?= isset($_SESSION['signed_in_user_id']) ? 'user' : 'home' ?>">Let me encrypt </a>
 			</div>
 
 			<!-- Collect the nav links, forms, and other content for toggling -->
 			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			  <ul class="nav navbar-nav">
-				<?php if(!isset($_SESSION['username'])): ?>
+				<?php if(!isset($_SESSION['signed_in_user_id'])): ?>
 				<li class="active">
 					<a href="?controller=home&action=register">Sign Up</a>
 				</li>
@@ -41,7 +42,7 @@
 				</li>
 				<?php endif; ?>
 			  </ul>
-				<?php if(isset($_SESSION['username'])): ?>
+				<?php if(isset($_SESSION['signed_in_user_id'])): ?>
 				<form class="navbar-form navbar-left">
 					<div class="form-group input-group">
 						<input id="friend-search" type="text" class="form-control" placeholder="Find a friend" autocomplete="off">
@@ -52,7 +53,7 @@
 				</form>
 				<?php endif; ?>
 				
-				<?php if(!isset($_SESSION['username'])): ?>
+				<?php if(!isset($_SESSION['signed_in_user_id'])): ?>
 				<form class="navbar-form navbar-right" action="?controller=user&action=login" method="POST">
         	<div class="form-group">
           	<input type="email" class="form-control" placeholder="user@mail.net" name="email" id="email">
@@ -65,7 +66,7 @@
 				<?php endif; ?>
 
 			  <ul class="nav navbar-nav navbar-right">
-					<?php if(isset($_SESSION['username'])): ?>
+					<?php if(isset($_SESSION['signed_in_user_id'])): ?>
 						<li>
 							<a href="?controller=user&action=logout">Logout</a>
 						</li>
@@ -125,7 +126,7 @@
 		<!-- JAVASCRIPT -->
 		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="js/bootstrap3-typeahead.min.js"></script>
-		<script type="text/javascript" src="js/crypto.js"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js"></script>
 		<script type="text/javascript" src="js/FileSaver.js"></script>
 		<script type="text/javascript" src="js/keystore.js"></script>
 		<script type="text/javascript" src="js/common.js"></script>

@@ -18,6 +18,15 @@ $(document).ready(function()
 		getFile(file_id, filename);			
 	});
 
+    $('.show-more').on('click', function() {
+        var show_more = $(this).parent().parent().next();
+        if(show_more.is(":visible")) {
+            show_more.slideUp();
+        } else {
+            show_more.slideDown();
+        }
+    });
+
     try{
         loadUserKeys();
     }
@@ -142,10 +151,67 @@ async function decryptPrivateKey(encryptedPrivateKey, IV, password)
     return ptBuffer;
 }
 
+async function prepareFriendKeys()
+{
+    // We need to fetch all of the public keys and import them before we can encrypt with them...
+    var parameters = '';
+    var targets = [];
+    $('.inner').children('li').each(function () {
+        if($(this).hasClass('selected')) {
+            var friend_id = $(this).data('original-index');
+            console.log(friend_id + ' selected ');
+
+            var friend = new Object();
+            friend.id = friend_id;
+            friend.public_blob = null;
+
+            targets.push(friend);
+
+            parameters += '&friend_ids[]='+friend_id;
+        }
+    });
+
+    // Send request for friends blobs
+    var request = new XMLHttpRequest();
+    request.responseType = 'arraybuffer';
+
+    request.friendCount = targets.length;
+
+    request.onreadystatechange = function() {
+         if(request.readyState === XMLHttpRequest.DONE) {
+            if(request.status === 200) {
+                try
+                {
+                    // The blobs are returned in the same order as the id's were passed in
+                    var blobs = parseResponseBlobs(request.response, request.friendCount);
+                    for(var i = 0; i < request.friendCount; ++i) {
+                        targets[i] = blobs[i];
+                    }
+                } 
+                catch(e) 
+                {
+                    showError("Failed to load user keys: "+e);
+                }
+            } else if(request.status == 500) {
+                showError(request.responseText);
+            }
+         }
+    }
+    request.open("GET", "?controller=user&action=get_public_key"+parameters, true);
+    request.send();
+}
+
 async function encryptUserFile(filedata) 
 {
     var filename = $('#file_name').val();
     var username = $('#email').html().trim();
+    var target = $('#target_me').prop("checked") ? 'me' : 'friends';
+
+    if(target == 'friends') 
+    {
+        await prepareFriendKeys();
+        return;
+    }
 
     startLoading();
 
@@ -163,7 +229,7 @@ async function encryptUserFile(filedata)
     loading(20);
 	
 	// Encrypt filedata with the bulk key
-    const cryptData = await g_Crypt.subtle.encrypt({name: "AES-CBC", iv: iv}, encKey, filedata);
+    const cryptData = await g_Crypt.subtle.encrypt({name: "AES-CBC", iv: iv}, encKey, filedata.data);
 
     loading(15);
 	
@@ -186,6 +252,7 @@ async function encryptUserFile(filedata)
 	var formData = new FormData();
     formData.append("recievers", '');
     formData.append("filename", filename);
+    formData.append("type", filedata.type);
     formData.append("iv", iv_blob, 'iv');
     formData.append("key", key_blob, 'key');
     formData.append('data', crypt_blob, 'data');

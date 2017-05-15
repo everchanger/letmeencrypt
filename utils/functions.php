@@ -131,4 +131,42 @@ function respondWithStatus($message = OK, $status = 200)
 	exit;
 }
 
+function formatBytes($bytes, $precision = 2) 
+{ 
+    $units = array('B', 'KB', 'MB', 'GB', 'TB'); 
+
+    $bytes = max($bytes, 0); 
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024)); 
+    $pow = min($pow, count($units) - 1); 
+
+    $bytes /= pow(1024, $pow);
+
+	// Don't show decimal on bytes and kilobytes
+	if($pow <= 1) 
+	{
+		$precision = 0;
+	}
+
+    return round($bytes, $precision) . ' ' . $units[$pow]; 
+} 
+
+function formatString($string, $maxLength, $numDots = 2) 
+{
+	if(strlen($string) > $maxLength) {
+		return substr($string, 0, $maxLength - $numDots) . str_repeat('.', $numDots);
+	}
+
+	return $string;
+}
+
+function splitMime($mime)
+{
+	$ret = array();
+	$split = strpos($mime, '/');
+	$ret[0] = substr($mime, 0, $split);
+	$ret[1] = substr($mime, $split+1);
+
+	return $ret;
+}
+
 ?>

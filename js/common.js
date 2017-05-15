@@ -26,6 +26,8 @@ $(document).ready(function() {
 		localStorage.setItem("userPassword", $('#user-password').val());
 	});
 
+	$('.selectpicker').selectpicker();
+
 	if($('#friend-search')) {
 		$('#friend-search').typeahead({
         autoSelect: true,
@@ -45,8 +47,7 @@ $(document).ready(function() {
 			window.location = '?controller=user&action=profile&id='+item.id;
 			return item;
 		}
-    });
-	}
+    });}
 				
 	$(':file').on('fileselect', function(event, numFiles, label) {
 		var input = $(this).parents('.input-group').find(':text'),
@@ -110,17 +111,25 @@ function readDataFromFileInput(files, callback) {
 	}
 	
 	var file = files[0];
-	var fileContent = { data:null };
+	var fileContent = { data:null, type:null };
+
+	if(file.type && typeof file.type != 'undefined') 
+	{
+		fileContent.type = file.type;
+	}
+	
 	
 	var reader = new FileReader();
 	reader.onloadend = handleReadDone(fileContent, callback);
-	reader.onload = (function(output) { return function(e) { output.data = e.target.result; }; })(fileContent);
+	reader.onload = (function(output) { return function(e) { 
+		output.data = e.target.result; 
+	}; })(fileContent);
 	reader.readAsArrayBuffer(file);
 }
 
 function handleReadDone(input, callback) {
 	return function(e) { 
-		callback(input.data); 
+		callback(input); 
 	};	
 }
 

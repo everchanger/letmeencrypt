@@ -4,7 +4,7 @@ namespace model;
 
 class File
 {
-    public function addEncryptedFile($filename, $org_filename, $size, $iv, $key, $receiver_id, $encrypter_id) 
+    public function addEncryptedFile($filename, $org_filename, $size, $extension, $mimetype, $iv, $key, $receiver_id, $encrypter_id) 
     {
         if(!isset($filename) || !isset($org_filename) || !isset($iv) || !isset($key) 
         || !isset($size) || !isset($receiver_id) || !isset($encrypter_id)) 
@@ -14,11 +14,13 @@ class File
 
         try 
         {
-            $stmt = DB::pdo()->prepare("INSERT INTO encrypted_files (file_name, original_name, size, encrypter_user_id) VALUES (:filename, :org_filename, :size, :encrypter)");
+            $stmt = DB::pdo()->prepare("INSERT INTO encrypted_files (file_name, original_name, size, extension, type, encrypter_user_id) VALUES (:filename, :org_filename, :size, :extension, :type, :encrypter)");
             
             $stmt->bindParam(":filename",       $filename);
             $stmt->bindParam(":org_filename",   $org_filename);
             $stmt->bindParam(":size",           $size);
+            $stmt->bindParam(":extension",      $extension);
+            $stmt->bindParam(":type",           $mimetype);
             $stmt->bindParam(":encrypter",      $encrypter_id);
 
             $stmt->execute();
@@ -49,7 +51,7 @@ class File
 
         try 
         {
-            $stmt = DB::pdo()->prepare("SELECT ef.original_name, ef.id, ef.upload_date, ef.encrypter_user_id, ef.size FROM encrypted_files AS ef INNER JOIN encrypted_keys_ivs AS eki WHERE eki.user_id = :user_id AND eki.file_id = ef.id");
+            $stmt = DB::pdo()->prepare("SELECT ef.original_name, ef.id, ef.upload_date, ef.extension, ef.encrypter_user_id, ef.size, ef.type FROM encrypted_files AS ef INNER JOIN encrypted_keys_ivs AS eki WHERE eki.user_id = :user_id AND eki.file_id = ef.id");
             
             $stmt->bindParam(":user_id", $user_id);
 
