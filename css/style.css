@@ -22,12 +22,6 @@ li
 	margin: 0;
 }
 
-.helloworld-list
-{
-	padding-left: 0;
-	list-style: none	
-}
-
 .footer > .container-fluid
 {
 	padding-right: 15px;
@@ -41,12 +35,6 @@ li
 	color: #ffffff;  
 }
 
-.earth-icon
-{
-	padding-left: 20px;
-	font-size: 128px;	
-}
-
 .no-padding
 {
 	padding: 0;	
@@ -55,6 +43,31 @@ li
 .hidden-elm 
 {
 	display: none;
+}
+
+.welcome-blob 
+{
+	font-weight: 100;
+	font-size: 2em;
+}
+
+.faq-list 
+{
+}
+
+.option 
+{
+	font-weight: 400;
+}
+
+.question
+{
+	font-weight: 400;
+}
+
+.answer
+{
+	font-weight: 200;
 }
 
 #sign-in-button 
@@ -203,10 +216,20 @@ li
 	background: red !important;
 }
 
+.filebox:hover
+{
+	box-shadow: 0px 12px 10px -10px #AAA;
+}
+
+.filebox:hover > .filebox-header
+{
+	background-color: #EFEFEF;
+}
+
 .filebox
 {
-	border: 2px solid #b1cfda;
-	box-shadow: 2px 2px 5px #AAA;
+	border: 2px solid #D8D8D8;
+	box-shadow: 0px 10px 10px -10px #AAA;
 	border-radius: 10px;
 	overflow: hidden;
 	margin-top: 10px; 
@@ -215,13 +238,14 @@ li
 
 .filebox-header
 {
-	background-color: #d7edf5;
+	background-color: #F4F4F4;
+	border-bottom: 1px solid #D0D0D0;
 	height: 4em;
 	padding: 7px;
-	color: #6d8b96;
+	color: #939393;
 }
 
-.filebox-header .col-xs-2, .col-xs-10
+.filebox-header > .col-xs-2, .filebox-header > .col-xs-9, .filebox-header > .col-xs-1
 {
 	padding: 0;
 }
@@ -229,19 +253,19 @@ li
 .filebox-filetype
 {
 	font-size: 2em;
-	color: #b1cfda;
+	color: #D8D8D8;
 	margin-top: 6px;
 }
 
 .filebox-preview
 {
-	background-color: #effbff;
+	background-color: #FFFFFF;
 	height: 4em;
 	padding: 7px;
-	color: #6d8b96;
+	color: #939393;
 }
 
-.filebox-preview .col-xs-2, .col-xs-9, .col-xs-12
+.filebox-preview > .col-xs-2, .filebox-preview > .col-xs-9, .filebox-preview > .col-xs-12
 {
 	padding: 0;
 }
@@ -249,6 +273,16 @@ li
 .filebox-preview .col-xs-9
 {
 	margin: 0 16px 0 0;
+}
+
+.filebox-remove
+{
+	color: #C4C4C4;
+}
+
+.filebox-remove:hover
+{
+	color: #7F7F7F;
 }
 
 .filebox-download-holder
@@ -259,12 +293,12 @@ li
 .filebox-download
 {
 	font-size: 3em;
-	color: #6d8b96;
+	color: #C4C4C4;
 }
 
 .filebox-download:hover
 {
-	color: #acd8e8;
+	color: #7F7F7F;
 }
 
 .filebox-more-info

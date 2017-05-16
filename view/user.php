@@ -29,70 +29,44 @@
 		</div>
 	</div>
 	<div class="row">
-	<?php foreach($files as $file): 
+	<?php 
+		$count = 0;
+		foreach($files as $file): 
+		$even = false;
+		if($count % 2 == 0) {
+			$even = true;
+		}
+
+		$count++;
 		$mime = splitMime($file->type);
 		$filetype = $mime[0];
-		$typeglyph = "glyphicon-file";
-
-		switch($mime[0])
-		{
-			case 'image':
-				$typeglyph = 'glyphicon-picture';
-				break;
-			case 'video':
-				$typeglyph = 'glyphicon-film';
-				break;
-			case 'audio':
-				$typeglyph = 'glyphicon-volume-up';
-				break;
-			case 'application':
-				switch($mime[1]) 
-				{
-					case 'pdf':
-					case 'msword':
-					case 'vnd.ms-excel':
-					case 'rtf':
-					case 'vnd.oasis.opendocument.presentation':
-					case 'vnd.oasis.opendocument.spreadsheet':
-					case 'vnd.oasis.opendocument.text':
-						$typeglyph = 'glyphicon-book';
-						break;
-					case 'zip':
-						$typeglyph = 'glyphicon-compressed';
-						break;
-					default:
-						$typeglyph = 'glyphicon-cog';
-						break;
-				}
-				
-				break;
-			case 'unknown':
-			default:
-				$typeglyph = 'glyphicon-file';
-				break;
-		}
+		$typeglyph = getGlyphMime($mime);
 	?>
-		<div class="col-sm-12 col-lg-3 col-sm-6">
+		<div class="col-xs-12 col-lg-3 col-sm-5 col-md-4 <?=$even ? 'col-sm-offset-1' : '' ?> col-md-offset-0">
 			<div class="filebox">
 				<div class="filebox-header" title="<?=$file->original_name?>">
 					<div class="col-xs-2"> 
 						<span class="glyphicon <?=$typeglyph?> filebox-filetype"></span>
 					</div>
-					<div class="col-xs-10">
+					<div class="col-xs-9">
 						<?=formatString($file->original_name, 25)?>
 					</div>
-					<div class="col-xs-10 offset-xs-2">
+					<div class="col-xs-1"> 
+						<a href="#" id="<?=$file->id?>" title="Delete file" class="remove_file"><span class="glyphicon glyphicon-remove filebox-remove"></span></a>
+					</div>
+					<div class="col-xs-9">
 						<?=formatBytes($file->size)?>
 					</div>
+					
 				</div>
 				<div class="filebox-preview">
-					<div class="col-xs-9">
+					<div class="col-xs-10">
 						<?= ucfirst($filetype) . ' (.'.$file->extension.')'?>
 					</div>
 					<div class="col-xs-2 filebox-download-holder"> 
-						<a href="#" name="<?=$file->original_name?>" id="<?=$file->id?>" class="download_file"><span class=" glyphicon glyphicon-download filebox-download"></span></a>
+						<a href="#" name="<?=$file->original_name?>" id="<?=$file->id?>" class="download_file" title="Download file"><span class=" glyphicon glyphicon-download filebox-download"></span></a>
 					</div>
-					<div class="col-xs-9">
+					<div class="col-xs-10">
 						<?=$file->upload_date?>
 					</div>
 					<div class="col-xs-12 hidden-elm">
@@ -136,7 +110,7 @@
 			<p class="help-block">Pick friends who will recieve the file.</p>
 			<select class="selectpicker" id="friend_select" multiple data-live-search="true" data-none-selected-text="No friend selected" data-style="btn-primary">
 				<?php foreach($friends as $friend): ?>
-				<option value="<?=$friend->id?>"><?=$friend->name?></option>
+				<option value="<?=$friend->id?>"><?=$friend->user_info->email?></option>
 				<?php endforeach ?>
 			</select>
 		</div>

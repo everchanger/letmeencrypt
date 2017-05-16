@@ -4,10 +4,9 @@ namespace model;
 
 class File
 {
-    public function addEncryptedFile($filename, $org_filename, $size, $extension, $mimetype, $iv, $key, $receiver_id, $encrypter_id) 
+    public function addEncryptedFile($filename, $org_filename, $size, $extension, $mimetype, $encrypter_id) 
     {
-        if(!isset($filename) || !isset($org_filename) || !isset($iv) || !isset($key) 
-        || !isset($size) || !isset($receiver_id) || !isset($encrypter_id)) 
+        if(!isset($filename) || !isset($org_filename) || !isset($size) || !isset($encrypter_id)) 
         {
             throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
         }
@@ -26,15 +25,32 @@ class File
             $stmt->execute();
 
             $fileID = DB::pdo()->lastInsertId();
+        } 
+        catch (\Exception $e) 
+        {
+            throw $e;
+        }
 
-            $stmt2 = DB::pdo()->prepare("INSERT INTO encrypted_keys_ivs (encrypted_key, encrypted_iv, file_id, user_id) VALUES (:key, :iv, :file, :user)");
+        return $fileID;
+    }
+
+    public function addUserKeyIV($reciever_id, $file_id, $iv, $key)
+    {
+        if(!isset($file_id) || !isset($iv) || !isset($key) || !isset($reciever_id)) 
+        {
+            throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
+        }
+
+         try 
+        {
+            $stmt = DB::pdo()->prepare("INSERT INTO encrypted_keys_ivs (encrypted_key, encrypted_iv, file_id, user_id) VALUES (:key, :iv, :file, :user)");
             
-            $stmt2->bindParam(":key",    $key);
-            $stmt2->bindParam(":iv",     $iv);
-            $stmt2->bindParam(":file",   $fileID);
-            $stmt2->bindParam(":user",   $receiver_id);
+            $stmt->bindParam(":key",    $key);
+            $stmt->bindParam(":iv",     $iv);
+            $stmt->bindParam(":file",   $file_id);
+            $stmt->bindParam(":user",   $reciever_id);
 
-            $stmt2->execute();
+            $stmt->execute();
         } 
         catch (\Exception $e) 
         {
@@ -58,7 +74,7 @@ class File
             $stmt->execute();
 
             if ($stmt->rowCount() <= 0){
-                throw new \Exception("No files found for user with id: ".$user_id." found", ERROR_CODE_NO_ENCRYPTED_FILES);
+                return array();
             }
 
             return $stmt->fetchAll(\PDO::FETCH_OBJ);
@@ -96,5 +112,66 @@ class File
         {
             throw $e;
         } 
+    }
+
+    // Deletes a file from the db, returns the filename to be deleted if no more references are found.
+    public function delete($user_id, $file_id)
+    {
+        $filename = null;
+
+         // We need the user ID to verify that the person making the request is the user that this file belongs to.
+        if(!isset($user_id) || !isset($file_id)) 
+        {
+            throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
+        }
+
+        // When we delete a file it's cruical that we delete the entry in the encrypted_iv_key table first. Then we can check if another user still has a reference to this file, else we delete it!
+        try 
+        {
+            // Delete our reference to the file.
+            $stmt = DB::pdo()->prepare("DELETE FROM encrypted_keys_ivs WHERE user_id = :user_id AND file_id = :file_id");
+            
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->bindParam(":file_id", $file_id);
+
+            $stmt->execute();
+
+            // Find any other references to this file, if not found we can delete it, else we are done here.
+            $stmt2 = DB::pdo()->prepare("SELECT * FROM encrypted_keys_ivs WHERE file_id = :file_id");
+            
+            $stmt2->bindParam(":file_id", $file_id);
+
+            $stmt2->execute();
+
+            if ($stmt2->rowCount() > 0){
+                return null;
+            }
+
+            // Get the filename of the file we're deleting, we return this so the controller can delete the actual file off the disk.
+            $stmt3 = DB::pdo()->prepare("SELECT file_name FROM encrypted_files WHERE id = :file_id");
+            
+            $stmt3->bindParam(":file_id", $file_id);
+
+            $stmt3->execute();
+
+            if ($stmt3->rowCount() <= 0){
+                throw new \Exception("No file with id: ".$file_id." found for user with id: ".$user_id, ERROR_CODE_NO_ENCRYPTED_FILES);
+            }
+
+            $fileobj = $stmt3->fetch(\PDO::FETCH_OBJ);
+
+            // Delete our reference to the file.
+            $stmt4 = DB::pdo()->prepare("DELETE FROM encrypted_files WHERE id = :file_id");
+            
+            $stmt4->bindParam(":file_id", $file_id);
+
+            $stmt4->execute();            
+        } 
+        catch (\Exception $e) 
+        {
+            throw $e;
+        }
+
+        return $fileobj->file_name;
     }
 }

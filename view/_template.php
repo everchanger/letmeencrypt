@@ -30,7 +30,7 @@
 			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			  <ul class="nav navbar-nav">
 				<?php if(!isset($_SESSION['signed_in_user_id'])): ?>
-				<li class="active">
+				<li>
 					<a href="?controller=home&action=register">Sign Up</a>
 				</li>
 				<?php else: ?>
@@ -41,6 +41,9 @@
 					<a href="?controller=user&action=files"><span class="glyphicon glyphicon-file"></span> Files</a>
 				</li>
 				<?php endif; ?>
+				<li>
+					<a href="?controller=home&action=faq">FAQ</a>
+				</li>
 			  </ul>
 				<?php if(isset($_SESSION['signed_in_user_id'])): ?>
 				<form class="navbar-form navbar-left">
@@ -61,7 +64,7 @@
 					<div class="form-group">
           	<input type="password" class="form-control" placeholder="Password" name="password" id="user-password">
         	</div>
-        	<button type="submit" class="btn btn-xs btn-success" id="sign-in-button">Sign in</button>
+        	<button type="submit" class="btn btn-xs btn-primary" id="sign-in-button">Sign in</button>
 				</form>
 				<?php endif; ?>
 

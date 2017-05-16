@@ -206,7 +206,13 @@ function parseResponseBlobs(responseBlob, numberOfBlobs)
         startPos = pos+splitter.length
     }
 
-    blobs.push(tmp.slice(pos+splitter.length));
+	if(numberOfBlobs > 1) {
+		var lastBuff = tmp.slice(pos+splitter.length);
+    	blobs.push(tmp.slice(pos+splitter.length));
+	} else {
+		blobs.push(tmp);
+	}
+	
 
     return blobs;
 }

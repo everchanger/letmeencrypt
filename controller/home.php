@@ -14,6 +14,11 @@ class home extends Base
 	{
 		respondWithView("register", array());
 	}
+
+	public function faq() 
+	{
+		respondWithView("faq", array());
+	}
 };
 
 ?>

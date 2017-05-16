@@ -7,16 +7,24 @@ $(document).ready(function()
 		$('#encrypt').prop("disabled", false); 		
 	});
 
-    $('#encrypt').on('click',  function() {
+    $('#encrypt').on('click', function() {
 		var files = $('#plain_file').prop("files");
 		readDataFromFileInput(files, encryptUserFile);			
 	});
 
-     $('.download_file').on('click',  function() {
+    $('.download_file').on('click', function() {
 		var file_id = $(this).attr("id");
         var filename = $(this).attr("name");
 		getFile(file_id, filename);			
 	});
+
+    $('.remove_file').on('click', function() {
+        var file_id = $(this).attr("id");
+        if(confirm('Are you sure you want to delete this file?'))
+        {
+            requestFileDelete(file_id);
+        }
+    });
 
     $('.show-more').on('click', function() {
         var show_more = $(this).parent().parent().next();
@@ -36,6 +44,17 @@ $(document).ready(function()
     }
     
 });
+
+function requestFileDelete(file_id)
+{
+    $.ajax({
+        url: '?controller=file&action=delete',
+        data: {id: file_id}
+    })
+    .done(function(response) {
+        showSuccess('File deleted');
+    });
+}
 
 function target_changed(evt) 
 {
@@ -151,19 +170,27 @@ async function decryptPrivateKey(encryptedPrivateKey, IV, password)
     return ptBuffer;
 }
 
-async function prepareFriendKeys()
+async function encryptUsingFriendKeys(filename, filedata)
 {
     // We need to fetch all of the public keys and import them before we can encrypt with them...
     var parameters = '';
     var targets = [];
+    var friend_options = [];
+
+    $('#friend_select > option').each(function() {
+        friend_options.push($(this).val());
+    });
+
     $('.inner').children('li').each(function () {
         if($(this).hasClass('selected')) {
-            var friend_id = $(this).data('original-index');
+            var org_index = $(this).data('original-index');
+            var friend_id = friend_options[org_index];
             console.log(friend_id + ' selected ');
+
 
             var friend = new Object();
             friend.id = friend_id;
-            friend.public_blob = null;
+            friend.public_key = null;
 
             targets.push(friend);
 
@@ -177,7 +204,7 @@ async function prepareFriendKeys()
 
     request.friendCount = targets.length;
 
-    request.onreadystatechange = function() {
+    request.onreadystatechange = async function() {
          if(request.readyState === XMLHttpRequest.DONE) {
             if(request.status === 200) {
                 try
@@ -185,8 +212,16 @@ async function prepareFriendKeys()
                     // The blobs are returned in the same order as the id's were passed in
                     var blobs = parseResponseBlobs(request.response, request.friendCount);
                     for(var i = 0; i < request.friendCount; ++i) {
-                        targets[i] = blobs[i];
+                        // Import the blob into a public key, then add it to the list
+                        targets[i].public_key = await g_Crypt.subtle.importKey("spki", blobs[i], {
+                            name: 'RSA-OAEP',
+                            modulusLength: 2048,
+                            publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
+                            hash: {name: "SHA-256"}
+                            }, true, ["encrypt"]);
                     }
+
+                    encryptAndUploadFile(filename, filedata, targets);
                 } 
                 catch(e) 
                 {
@@ -209,52 +244,36 @@ async function encryptUserFile(filedata)
 
     if(target == 'friends') 
     {
-        await prepareFriendKeys();
-        return;
+        encryptUsingFriendKeys(filename, filedata);
+    } else {
+         // Get the public key from the user that the file is to be sent to. (For now ourselfs only)
+        await g_keyStore.open();
+
+        var keyPair = await g_keyStore.getKey("name", username);
+
+        var myUserList = [{id: 0, public_key: keyPair.publicKey}];
+
+        encryptAndUploadFile(filename, filedata, myUserList);
     }
+}
 
-    startLoading();
-
-    // Get the public key from the user that the file is to be sent to. (For now ourselfs only)
-    await g_keyStore.open();
-
-    var keyPair = await g_keyStore.getKey("name", username);
-
-    loading(5);
-
-	// Generate bulk crypto key and iv.
+async function encryptAndUploadFile(filename, filedata, userarray)
+{
+    // Generate bulk crypto key and iv.
 	const encKey = await g_Crypt.subtle.generateKey({name: "AES-CBC", length: 256}, true, ["decrypt", "encrypt"]);
 	var iv = g_Crypt.getRandomValues(new Uint8Array(16));
 
-    loading(20);
-	
 	// Encrypt filedata with the bulk key
     const cryptData = await g_Crypt.subtle.encrypt({name: "AES-CBC", iv: iv}, encKey, filedata.data);
-
-    loading(15);
-	
-	// Encrypt iv using the users public key
-	const encryptedIV   = await g_Crypt.subtle.encrypt({name: "RSA-OAEP"}, keyPair.publicKey, iv);
-    loading(15);
-
-    var exported_key    = await g_Crypt.subtle.exportKey("raw", encKey);
-    loading(10);
-
-    const encryptedKey  = await g_Crypt.subtle.encrypt({name: "RSA-OAEP"}, keyPair.publicKey, exported_key);
-    loading(15);
-
-    var iv_blob     = new Blob([encryptedIV], {type: "application/octet-stream"});
-    var key_blob    = new Blob([encryptedKey], {type: "application/octet-stream"});
     var crypt_blob  = new Blob([cryptData], {type: "application/octet-stream"});
 
-    loading(10);
-	
-	var formData = new FormData();
-    formData.append("recievers", '');
+    // Export bulk key
+    var exported_key    = await g_Crypt.subtle.exportKey("raw", encKey);
+
+    // Upload file
+    var formData = new FormData();
     formData.append("filename", filename);
     formData.append("type", filedata.type);
-    formData.append("iv", iv_blob, 'iv');
-    formData.append("key", key_blob, 'key');
     formData.append('data', crypt_blob, 'data');
 
     var request = new XMLHttpRequest();
@@ -262,13 +281,15 @@ async function encryptUserFile(filedata)
     request.onreadystatechange = function() {
          if(request.readyState === XMLHttpRequest.DONE) {
             if(request.status === 200) {
-                loading(5);
-                showSuccess("Encrypted file uploaded");
-                endLoading();
-                //window.location = "?controller=user&action=show&user_message=File upload";
+                var file_id = request.responseText;
+                // showSuccess("Encrypted file uploaded");
+                // window.location = "?controller=user&action=show&user_message=File upload";
+
+                for(var i = 0; i < userarray.length; ++i) {
+                    encryptAndUploadKeysIV(userarray[i].id, userarray[i].public_key, file_id, exported_key, iv);
+                }
             } else if(request.status == 500) {
                 showError(request.responseText);
-                endLoading();
             }
          }
     }
@@ -276,7 +297,40 @@ async function encryptUserFile(filedata)
     request.open('POST', '?controller=file&action=add', true);
     request.send(formData);
 
-    loading(5);
+    // When done call 'encryptAndUploadKeysIV' with returned file id
+}
+
+async function encryptAndUploadKeysIV(user_id, public_key, file_id, key, iv)
+{
+    // Encrypt iv and key using the users public key
+	const encryptedIV   = await g_Crypt.subtle.encrypt({name: "RSA-OAEP"}, public_key, iv);
+    const encryptedKey  = await g_Crypt.subtle.encrypt({name: "RSA-OAEP"}, public_key, key);
+
+    var iv_blob     = new Blob([encryptedIV], {type: "application/octet-stream"});
+    var key_blob    = new Blob([encryptedKey], {type: "application/octet-stream"});
+
+    // Upload the encrypted iv and key to the server.	
+	var formData = new FormData();
+    formData.append("file_id", file_id);
+    formData.append("reciever_id", user_id);
+    formData.append("iv", iv_blob, 'iv');
+    formData.append("key", key_blob, 'key');
+   
+    var request = new XMLHttpRequest();
+
+    request.onreadystatechange = function() {
+         if(request.readyState === XMLHttpRequest.DONE) {
+            if(request.status === 200) {
+                showSuccess("Encrypted file uploaded");
+                //window.location = "?controller=user&action=show&user_message=File upload";
+            } else if(request.status == 500) {
+                showError(request.responseText);
+            }
+         }
+    }
+
+    request.open('POST', '?controller=file&action=addEncryptedKeyIV', true);
+    request.send(formData);
 }
 
 async function getFile(fileID, filename) 

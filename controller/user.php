@@ -20,13 +20,19 @@ class User extends Base
     {
         $user = new \model\User();
         $file = new \model\File();
+        $friend = new \model\Friend();
 
         $files = array();
+        $friends = array();
 
         try 
         {
             $signedInUser = $user->get($_SESSION['signed_in_user_id']);
             $files = $file->get_users_files($signedInUser->id);
+            $friends = $friend->getAll($signedInUser->id);
+            foreach($friends as $friend) {
+                $friend->user_info = $user->getPublicInfo($friend->id);
+            }
         } 
         catch(\Exception $e)
         {
@@ -35,11 +41,6 @@ class User extends Base
                 $this->respondWithError("Database error, please try again later"); 
             }
         }
-
-        $friends   = array(); 
-        $friends[] = new lameFriend("tasty@stuff.com", 0);
-        $friends[] = new lameFriend("nasty@jet.com", 1);
-        $friends[] = new lameFriend("zasty@shuffle.com", 2);
 
         respondWithView("user", array("user" => $signedInUser, "files" => $files, "friends" => $friends));
     }

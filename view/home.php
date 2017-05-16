@@ -1,10 +1,13 @@
-<div class="col-xs-offset-3 col-xs-6 col-sm-offset-5 col-sm-6">
-	<ul class="helloworld-list">
+<div class="col-xs-12 col-sm-8 col-sm-offset-4">
+	<ul class="welcome-blob">
 		<li>
-			<span class="earth-icon glyphicon glyphicon-globe"></span>
+			<p>1) Create an account.</p>
 		</li>
 		<li>
-			<h2>Hello World!</h2>
+			<p>2) Find your friends.</p>
+		</li>
+		<li>
+			<p>3) Share files securely!</p>
 		</li>
 	</ul>
 </div>

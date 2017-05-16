@@ -99,14 +99,12 @@ class User
         } 
     }
 
-    public function getProfile($loggedOnUserId, $id) 
+    public function getPublicInfo($id)
     {
-        if(!isset($id) || !isset($loggedOnUserId)) 
+        if(!isset($id)) 
         {
             throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
         }
-
-        $profile = null;
 
         try 
         {
@@ -120,7 +118,24 @@ class User
                 throw new \Exception("No user with id: ".$id." found", ERROR_CODE_USER_NOT_FOUND);
             }
 
-            $profile = $stmt->fetch(\PDO::FETCH_OBJ);
+            return $stmt->fetch(\PDO::FETCH_OBJ);
+        } 
+        catch (\Exception $e) 
+        {
+            throw $e;
+        } 
+    }
+
+    public function getProfile($loggedOnUserId, $id) 
+    {
+        if(!isset($id) || !isset($loggedOnUserId)) 
+        {
+            throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
+        }
+
+        try 
+        {
+            $profile = $this->getPublicInfo($id);
         } 
         catch (\Exception $e) 
         {

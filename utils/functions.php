@@ -116,7 +116,7 @@ function respondWithView($view, $args, $status = 200, $usetemplate = true)
 	exit;
 }
 
-function respondWithStatus($message = OK, $status = 200) 
+function respondWithStatus($message = 'OK', $status = 200) 
 {
 	date_default_timezone_set ("Europe/Stockholm");
 
@@ -167,6 +167,51 @@ function splitMime($mime)
 	$ret[1] = substr($mime, $split+1);
 
 	return $ret;
+}
+
+function getGlyphMime($mime) 
+{
+	$typeglyph = "glyphicon-file";
+
+	switch($mime[0])
+	{
+		case 'image':
+			$typeglyph = 'glyphicon-picture';
+			break;
+		case 'video':
+			$typeglyph = 'glyphicon-film';
+			break;
+		case 'audio':
+			$typeglyph = 'glyphicon-volume-up';
+			break;
+		case 'application':
+			switch($mime[1]) 
+			{
+				case 'pdf':
+				case 'msword':
+				case 'vnd.ms-excel':
+				case 'rtf':
+				case 'vnd.oasis.opendocument.presentation':
+				case 'vnd.oasis.opendocument.spreadsheet':
+				case 'vnd.oasis.opendocument.text':
+					$typeglyph = 'glyphicon-book';
+					break;
+				case 'zip':
+					$typeglyph = 'glyphicon-compressed';
+					break;
+				default:
+					$typeglyph = 'glyphicon-cog';
+					break;
+			}
+			
+			break;
+		case 'unknown':
+		default:
+			$typeglyph = 'glyphicon-file';
+			break;
+	}
+
+	return $typeglyph;
 }
 
 ?>

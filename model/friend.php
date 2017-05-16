@@ -4,6 +4,8 @@ namespace model;
 
 class UserFriend
 {
+    public $id = null;
+    public $user_info = null;
     public $connected = false;
     public $requestSent = false;
     public $requestRecieved = false;
@@ -12,8 +14,6 @@ class UserFriend
 
 class Friend
 {
-    
-
     public function get($id, $user_id) 
     {
         if(!isset($id) && !isset($user_id)) 
@@ -67,6 +67,68 @@ class Friend
         }
 
         return $friend;
+    }
+
+     public function getAll($id) 
+    {
+        if(!isset($id)) 
+        {
+            throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
+        }
+
+        try 
+        {
+            // $stmt = DB::pdo()->prepare("SELECT u.id, u.email, u.alias, u.public_key FROM users as u WHERE u.id = :id ");
+            $stmt = DB::pdo()->prepare("SELECT user_id_1, user_id_2, accepted FROM friends WHERE user_id_1 = :id OR user_id_2 = :id2");
+
+            $stmt->bindParam(":id", $id);
+            $stmt->bindParam(":id2", $id);
+
+            $stmt->execute();
+
+            if ($stmt->rowCount() <= 0){
+                throw new \Exception("No friendships for user with id: ".$id." found", ERROR_CODE_FRIENDSHIP_NOT_FOUND);
+            }
+
+            $friendships = $stmt->fetchAll(\PDO::FETCH_OBJ);
+        } 
+        catch (\Exception $e) 
+        {
+            throw $e;
+        } 
+
+        $usersFriends = array();
+
+        foreach($friendships as $friendship) {
+            $friend = new UserFriend(); 
+            if($friendship && $friendship->accepted) 
+            {
+                $friend->accepted = true;
+            } 
+            else if($friendship) 
+            {
+                $friend->connected = true;
+            }
+
+            if($friendship->user_id_1 == $id) {
+                $friend->id = $friendship->user_id_2;
+            } else {
+                $friend->id = $friendship->user_id_1;
+            }
+
+            if($friend->connected && !$friend->accepted) {
+                if($friendship->user_id_1 == $user_id) {
+                    $friend->requestRecieved = true;
+                } else {
+                    $friend->requestSent = true;
+                }
+            }
+
+            $usersFriends[] = $friend;
+        }
+        
+
+        return $usersFriends;
     }
 
     public function addFriendRequest($id, $user_id) 
