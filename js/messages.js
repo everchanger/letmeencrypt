@@ -59,6 +59,6 @@ function showMessageField(message)
 
 function closeMessage()
 {
-	$('#message_field').slideUp(400, function(){	
+	$('#message_field').clearQueue().slideUp(400, function(){	
 	});
 }

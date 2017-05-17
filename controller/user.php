@@ -65,6 +65,35 @@ class User extends Base
         respondWithView("profile", array("user" => $userProfile));
     }
 
+    public function updateFiles()
+    {
+        $user = new \model\User();
+        $file = new \model\File();
+        $friend = new \model\Friend();
+
+        $files = array();
+        $friends = array();
+
+        try 
+        {
+            $signedInUser = $user->get($_SESSION['signed_in_user_id']);
+            $files = $file->get_users_files($signedInUser->id);
+            $friends = $friend->getAll($signedInUser->id);
+            foreach($friends as $friend) {
+                $friend->user_info = $user->getPublicInfo($friend->id);
+            }
+        } 
+        catch(\Exception $e)
+        {
+            if(intval($e->getCode()) != ERROR_CODE_NO_ENCRYPTED_FILES)
+            {
+                $this->respondWithError("Database error, please try again later"); 
+            }
+        }
+
+        respondWithView("user_files", array("user" => $signedInUser, "files" => $files, "friends" => $friends), 200, false);
+    }
+
     public function get_binary_data() 
     {
         $user = new \model\User();

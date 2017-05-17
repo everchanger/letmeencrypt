@@ -84,6 +84,11 @@ function loading(progress)
 	$('#loading').animate({width:(loading_goal + "%")}, 75);
 }
 
+function loadingLeft()
+{
+	return 100 - loading_goal;
+}
+
 function endLoading()
 {
 	$('#loading-bar').removeClass('running');

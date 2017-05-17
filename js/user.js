@@ -12,19 +12,7 @@ $(document).ready(function()
 		readDataFromFileInput(files, encryptUserFile);			
 	});
 
-    $('.download_file').on('click', function() {
-		var file_id = $(this).attr("id");
-        var filename = $(this).attr("name");
-		getFile(file_id, filename);			
-	});
-
-    $('.remove_file').on('click', function() {
-        var file_id = $(this).attr("id");
-        if(confirm('Are you sure you want to delete this file?'))
-        {
-            requestFileDelete(file_id);
-        }
-    });
+    bindFileFunctions();
 
     $('.show-more').on('click', function() {
         var show_more = $(this).parent().parent().next();
@@ -42,8 +30,61 @@ $(document).ready(function()
     {
         alert(e);
     }
-    
+
+    // Set timer to autoupdate the file segment
+    setInterval(updateFiles, 5000);
 });
+
+function updateFiles() 
+{
+    var filelist = getFileIDList();
+
+    $.ajax({
+        url: '?controller=user&action=updateFiles',
+    })
+    .done(function(response) {
+        $('#files').html(response);
+        bindFileFunctions();
+
+        var newFileList = getFileIDList();
+
+        // Check for new entries, these we will send notifications about!
+        for(var i = 0; i < newFileList.length; ++i)
+        {
+            if(file_ids.indexOf(newFileList[i]) == -1 ) {
+                console.log('File with ID: '+ newFileList[i]+' added!');
+            }
+        }
+    });
+}
+
+function bindFileFunctions() 
+{
+    $('.download_file').on('click', function() {
+		var file_id = $(this).attr("id");
+        var filename = $(this).attr("name");
+		getFile(file_id, filename);			
+	});
+
+    $('.remove_file').on('click', function() {
+        var file_id = $(this).attr("id");
+        if(confirm('Are you sure you want to delete this file?'))
+        {
+            requestFileDelete(file_id);
+        }
+    });
+}
+
+function getFileIDList() 
+{
+    // Create a list with id's to compare to the 
+    var filelist = [];
+    $('#files > div').each(function() {
+        filelist.push($(this).attr('id'));
+    });
+
+    return filelist;
+}
 
 function requestFileDelete(file_id)
 {
@@ -52,6 +93,7 @@ function requestFileDelete(file_id)
         data: {id: file_id}
     })
     .done(function(response) {
+        updateFiles();
         showSuccess('File deleted');
     });
 }
@@ -170,39 +212,69 @@ async function decryptPrivateKey(encryptedPrivateKey, IV, password)
     return ptBuffer;
 }
 
-async function encryptUsingFriendKeys(filename, filedata)
+async function encryptUserFile(filedata) 
+{
+    var filename = $('#file_name').val();
+    var username = $('#email').html().trim();
+    var target = $('#target_me').prop("checked") ? 'me' : 'friends';
+
+    if(target == 'friends') 
+    {
+        // Check if we actually have any friends selected, else abort
+        var parameters = '';
+        var userlist = [];
+        var friend_options = [];
+
+        $('#friend_select > option').each(function() {
+            friend_options.push($(this).val());
+        });
+
+        $('.inner').children('li').each(function () {
+            if($(this).hasClass('selected')) {
+                var org_index = $(this).data('original-index');
+                var friend_id = friend_options[org_index];
+                console.log(friend_id + ' selected ');
+
+
+                var friend = new Object();
+                friend.id = friend_id;
+                friend.public_key = null;
+
+                userlist.push(friend);
+
+                parameters += '&friend_ids[]='+friend_id;
+            }
+        });
+
+        if(userlist.length <= 0) 
+        {
+            showError('No friends selected');
+            return;
+        }
+
+        startLoading();
+        encryptUsingFriendKeys(filename, filedata, userlist, parameters);
+    } else {
+         // Get the public key from the user that the file is to be sent to. (For now ourselfs only)
+        await g_keyStore.open();
+
+        var keyPair = await g_keyStore.getKey("name", username);
+
+        var myUserList = [{id: 0, public_key: keyPair.publicKey}];
+
+        startLoading();
+        encryptAndUploadFile(filename, filedata, myUserList);
+    }
+}
+
+async function encryptUsingFriendKeys(filename, filedata, userlist, parameters)
 {
     // We need to fetch all of the public keys and import them before we can encrypt with them...
-    var parameters = '';
-    var targets = [];
-    var friend_options = [];
-
-    $('#friend_select > option').each(function() {
-        friend_options.push($(this).val());
-    });
-
-    $('.inner').children('li').each(function () {
-        if($(this).hasClass('selected')) {
-            var org_index = $(this).data('original-index');
-            var friend_id = friend_options[org_index];
-            console.log(friend_id + ' selected ');
-
-
-            var friend = new Object();
-            friend.id = friend_id;
-            friend.public_key = null;
-
-            targets.push(friend);
-
-            parameters += '&friend_ids[]='+friend_id;
-        }
-    });
-
     // Send request for friends blobs
     var request = new XMLHttpRequest();
     request.responseType = 'arraybuffer';
 
-    request.friendCount = targets.length;
+    request.friendCount = userlist.length;
 
     request.onreadystatechange = async function() {
          if(request.readyState === XMLHttpRequest.DONE) {
@@ -213,7 +285,7 @@ async function encryptUsingFriendKeys(filename, filedata)
                     var blobs = parseResponseBlobs(request.response, request.friendCount);
                     for(var i = 0; i < request.friendCount; ++i) {
                         // Import the blob into a public key, then add it to the list
-                        targets[i].public_key = await g_Crypt.subtle.importKey("spki", blobs[i], {
+                        userlist[i].public_key = await g_Crypt.subtle.importKey("spki", blobs[i], {
                             name: 'RSA-OAEP',
                             modulusLength: 2048,
                             publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
@@ -221,7 +293,7 @@ async function encryptUsingFriendKeys(filename, filedata)
                             }, true, ["encrypt"]);
                     }
 
-                    encryptAndUploadFile(filename, filedata, targets);
+                    encryptAndUploadFile(filename, filedata, userlist);
                 } 
                 catch(e) 
                 {
@@ -236,36 +308,19 @@ async function encryptUsingFriendKeys(filename, filedata)
     request.send();
 }
 
-async function encryptUserFile(filedata) 
-{
-    var filename = $('#file_name').val();
-    var username = $('#email').html().trim();
-    var target = $('#target_me').prop("checked") ? 'me' : 'friends';
-
-    if(target == 'friends') 
-    {
-        encryptUsingFriendKeys(filename, filedata);
-    } else {
-         // Get the public key from the user that the file is to be sent to. (For now ourselfs only)
-        await g_keyStore.open();
-
-        var keyPair = await g_keyStore.getKey("name", username);
-
-        var myUserList = [{id: 0, public_key: keyPair.publicKey}];
-
-        encryptAndUploadFile(filename, filedata, myUserList);
-    }
-}
-
 async function encryptAndUploadFile(filename, filedata, userarray)
 {
     // Generate bulk crypto key and iv.
 	const encKey = await g_Crypt.subtle.generateKey({name: "AES-CBC", length: 256}, true, ["decrypt", "encrypt"]);
 	var iv = g_Crypt.getRandomValues(new Uint8Array(16));
 
+    loading(10);
+
 	// Encrypt filedata with the bulk key
     const cryptData = await g_Crypt.subtle.encrypt({name: "AES-CBC", iv: iv}, encKey, filedata.data);
     var crypt_blob  = new Blob([cryptData], {type: "application/octet-stream"});
+
+    loading(10);
 
     // Export bulk key
     var exported_key    = await g_Crypt.subtle.exportKey("raw", encKey);
@@ -282,12 +337,13 @@ async function encryptAndUploadFile(filename, filedata, userarray)
          if(request.readyState === XMLHttpRequest.DONE) {
             if(request.status === 200) {
                 var file_id = request.responseText;
-                // showSuccess("Encrypted file uploaded");
-                // window.location = "?controller=user&action=show&user_message=File upload";
-
+                var loadingPerUser = loadingLeft() / userarray.length;
                 for(var i = 0; i < userarray.length; ++i) {
                     encryptAndUploadKeysIV(userarray[i].id, userarray[i].public_key, file_id, exported_key, iv);
+                    loading(loadingPerUser);
                 }
+                updateFiles();
+                endLoading();
             } else if(request.status == 500) {
                 showError(request.responseText);
             }
@@ -297,6 +353,7 @@ async function encryptAndUploadFile(filename, filedata, userarray)
     request.open('POST', '?controller=file&action=add', true);
     request.send(formData);
 
+    loading(10);
     // When done call 'encryptAndUploadKeysIV' with returned file id
 }
 
@@ -322,7 +379,6 @@ async function encryptAndUploadKeysIV(user_id, public_key, file_id, key, iv)
          if(request.readyState === XMLHttpRequest.DONE) {
             if(request.status === 200) {
                 showSuccess("Encrypted file uploaded");
-                //window.location = "?controller=user&action=show&user_message=File upload";
             } else if(request.status == 500) {
                 showError(request.responseText);
             }
