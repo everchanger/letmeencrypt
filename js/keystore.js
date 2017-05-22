@@ -131,6 +131,42 @@ function KeyStore() {
         });
     };
 
+    // Delete key entry
+    self.deleteKey = function(keyToDelete) {
+        return new Promise(function(fulfill, reject) {
+            if (!self.db) {
+                reject(new Error("KeyStore is not open."));
+            }
+
+            var transaction = self.db.transaction([self.objectStoreName], "readwrite");
+            var objectStore = transaction.objectStore(self.objectStoreName);
+
+            var request;
+
+            request = objectStore.index("name").openCursor();
+           
+
+            request.onsuccess = function(evt) {
+                
+                var cursor = evt.target.result;
+                if(cursor) {
+                    if(keyToDelete == cursor.value.name) 
+                    {
+                        cursor.delete();
+                        fulfill(evt.target.result);
+                        return;
+                    }
+                    cursor.continue();
+                }
+                
+            };
+
+            request.onerror = function(evt) {
+                reject(evt.target.error);
+            };
+        });
+    };
+
 
     // listKeys method
     //

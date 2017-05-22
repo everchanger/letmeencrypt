@@ -23,13 +23,6 @@ $(document).ready(function()
         }
     });
 
-    try{
-        loadUserKeys();
-    }
-    catch(e) 
-    {
-        alert(e);
-    }
 
     // Set timer to autoupdate the file segment
     setInterval(updateFiles, 5000);
@@ -51,7 +44,7 @@ function updateFiles()
         // Check for new entries, these we will send notifications about!
         for(var i = 0; i < newFileList.length; ++i)
         {
-            if(file_ids.indexOf(newFileList[i]) == -1 ) {
+            if(filelist.indexOf(newFileList[i]) == -1 ) {
                 console.log('File with ID: '+ newFileList[i]+' added!');
             }
         }
@@ -105,111 +98,6 @@ function target_changed(evt)
     } else {
         $('#friend_list').show();
     }
-}
-
-async function loadUserKeys()
-{
-    await g_keyStore.open();
-
-    var username = $('#email').html().trim();
-
-    var list = await g_keyStore.listKeys();
-    if(list != null && list.length)  {	
-        for(var i=0;i<list.length;i++) {
-            if(list[i].value.name == username) {
-                if(list[i].value.privateKey) {
-                    $('#private_key_loaded').removeClass('glyphicon-remove');
-                    $('#private_key_loaded').addClass('glyphicon-ok');
-                } 
-                if(list[i].value.publicKey) {
-                    $('#public_key_loaded').removeClass('glyphicon-remove');
-                    $('#public_key_loaded').addClass('glyphicon-ok');
-                }
-
-                return;
-            }
-        }
-    }
-
-    var request = new XMLHttpRequest();
-    request.responseType = 'arraybuffer';
-
-    request.onreadystatechange = function() {
-         if(request.readyState === XMLHttpRequest.DONE) {
-            if(request.status === 200) {
-                try
-                {
-                    var blobs = parseResponseBlobs(request.response, 3);
-                    loadKeys(blobs[0], blobs[1], blobs[2]);
-                } 
-                catch(e) 
-                {
-                    showError("Failed to load user keys: "+e);
-                }
-            } else if(request.status == 500) {
-                showError(request.responseText);
-            }
-         }
-    }
-    request.open("GET", "?controller=user&action=get_binary_data", true);
-    request.send();
-}
-
-async function loadKeys(public_blob, private_blob, private_iv) 
-{
-    var username = $('#email').html().trim();
-
-    await g_keyStore.open();
-
-    try {
-        var crypto_public_key = await g_Crypt.subtle.importKey("spki", public_blob, {
-            name: 'RSA-OAEP',
-            modulusLength: 2048,
-            publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
-            hash: {name: "SHA-256"}
-            }, true, ["encrypt"]);
-
-        console.log('public: '+crypto_public_key);
-
-        var userpassword = localStorage.getItem("userPassword");
-
-        var decrypted_private_key = await decryptPrivateKey(private_blob, private_iv, userpassword);
-
-        // See, I told you, not so shady!
-        localStorage.setItem("userPassword", null);
-
-        var crypto_private_key  = await g_Crypt.subtle.importKey("pkcs8", decrypted_private_key, {
-            name: 'RSA-OAEP',
-            modulusLength: 2048,
-            publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
-            hash: {name: "SHA-256"}
-            }, false, ["decrypt"]);
-        
-        console.log('private: '+crypto_public_key);
-
-        await g_keyStore.storeKey(crypto_public_key, crypto_private_key, username);
-
-        $('#public_key_loaded').removeClass('glyphicon-remove');
-        $('#public_key_loaded').addClass('glyphicon-ok');
-        $('#private_key_loaded').removeClass('glyphicon-remove');
-        $('#private_key_loaded').addClass('glyphicon-ok');
-        
-    } catch(err) { 
-        showError('Error in keyLoaded: '+err);
-    }
-}
-
-async function decryptPrivateKey(encryptedPrivateKey, IV, password) 
-{
-    const pwUtf8 = new TextEncoder().encode(password);
-    const pwHash = await g_Crypt.subtle.digest('SHA-256', pwUtf8);
-
-    const alg = { name: 'AES-GCM', iv: IV };
-    const key = await g_Crypt.subtle.importKey('raw', pwHash, alg, false, ['decrypt']);
-
-    const ptBuffer = await g_Crypt.subtle.decrypt(alg, key, encryptedPrivateKey);
-
-    return ptBuffer;
 }
 
 async function encryptUserFile(filedata) 

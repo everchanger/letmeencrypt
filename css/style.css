@@ -17,8 +17,22 @@ li
 	list-style: none;
 }
 
+li > a > .glyphicon
+{
+	top: 2px;
+}
+
+.dropdown-menu>li>div 
+{
+	padding: 12px 15px;
+	color: white;
+	font-size: 13px;
+    font-weight: 300;
+	width: 250px;
+}
+
 .no-margin-bottom
- {
+{
 	margin: 0;
 }
 
@@ -77,12 +91,17 @@ li
 	
 }
 
-.key_status.glyphicon-ok 
+.key_status.glyphicon-ok-circle 
 {
 	color: green;
 }
 
-.key_status.glyphicon-remove 
+.key_status.glyphicon-banned-circle 
+{
+	color: yellow;
+}
+
+.key_status.glyphicon-remove-circle 
 {
 	color: red;
 }
@@ -261,12 +280,12 @@ li
 .filebox-preview
 {
 	background-color: #FFFFFF;
-	height: 4em;
+	height: 5.25em;
 	padding: 7px;
 	color: #939393;
 }
 
-.filebox-preview > .col-xs-2, .filebox-preview > .col-xs-9, .filebox-preview > .col-xs-12
+.filebox-preview > .col-xs-2, .filebox-preview > .col-xs-10, .filebox-preview > .col-xs-12
 {
 	padding: 0;
 }
@@ -288,23 +307,18 @@ li
 
 .filebox-download-holder
 {
-	height: 23px;
+	height: 25px;
 }
 
 .filebox-download
 {
-	font-size: 3em;
+	font-size: 2.5em;
 	color: #C4C4C4;
 }
 
 .filebox-download:hover
 {
 	color: #7F7F7F;
-}
-
-.filebox-more-info
-{
-	margin-top: 10px;
 }
 
 .filebox-body

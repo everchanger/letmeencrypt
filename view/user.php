@@ -1,26 +1,6 @@
 <div class="col-xs-12">
 	<div class="row">
 		<div class="col-xs-6">
-			<h3>Key status</h3>
-			<div class="col-xs-12">
-				<p class="help-block">View the current status of your keys.</p>
-				<p>Public key:  <span class="glyphicon key_status glyphicon-remove" id="public_key_loaded"></span></p>
-				<p>Private key: <span class="glyphicon key_status glyphicon-remove" id="private_key_loaded"></span></p>
-				<div class="hidden-elm">
-					<h4>Load private key</h4>
-					<div class="input-group">
-						<label for="private_key" class="input-group-btn">
-							<span class="btn btn-primary">Browse
-								<input type="file" id="private_key" accept="privateKey" onchange="readKeyFromInput(this.files)" class="hidden">
-							</span>
-						</label>
-						<input type="text" class="form-control" readonly="">
-					</div>
-					<p class="help-block">Your private key will not be submited to the server only used localy by javascript to decrypt your files for you.</p>->
-				</div>
-			</div>
-		</div>
-		<div class="col-xs-6">
 			<h3>Encrypt file</h3>
 			<div class="col-xs-12">
 				<p class="help-block">Encrypt a file for storage, either for yourself or for a friend.</p>
@@ -31,10 +11,6 @@
 	<div id="files" class="row">
 		<?php include 'view/user_files.php' ?>
 	</div>
-</div>
-
-<div id="email" class="hidden">
-	<?=$user->email?>
 </div>
 
 <div id="myModal" class="modal fade">

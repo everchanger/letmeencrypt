@@ -87,7 +87,7 @@ class Friend
             $stmt->execute();
 
             if ($stmt->rowCount() <= 0){
-                throw new \Exception("No friendships for user with id: ".$id." found", ERROR_CODE_FRIENDSHIP_NOT_FOUND);
+                return array();
             }
 
             $friendships = $stmt->fetchAll(\PDO::FETCH_OBJ);

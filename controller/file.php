@@ -122,6 +122,7 @@ class file extends Base
 
 		// TODO Check that this path is actually inside the upload folder.
 		
+		header('Content-type: application/octet-stream');
 		echo file_get_contents($filePath);
 		echo SPLITTER;
 		echo $fileObj->encrypted_key;

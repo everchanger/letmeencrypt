@@ -60,7 +60,153 @@ $(document).ready(function() {
 		}
 
 	});
+
+	if($('#email').html().trim().length > 0) 
+	{
+		try{
+			loadUserKeys();
+		}
+		catch(e) 
+		{
+			alert(e);
+		}
+	}
+
+	if($('#clear_loaded_keys')) {
+		$('#clear_loaded_keys').on('click', function() {
+		// This is not as shady as it looks, we stored the users password temporary to be able to decrypt the private key!
+		deleteKeys();
+	});
+	}
 });
+
+async function deleteKeys() 
+{
+	await g_keyStore.open();
+
+    var username = $('#email').html().trim();
+
+	try 
+	{
+		await g_keyStore.deleteKey(username);
+		$('#public_key_loaded').removeClass('glyphicon-ok-circle');
+		$('#public_key_loaded').addClass('glyphicon-remove-circle');
+        
+		$('#private_key_loaded').removeClass('glyphicon-ok-circle');
+		$('#private_key_loaded').addClass('glyphicon-remove-circle');
+    				
+		showSuccess("Deleted loaded keys");
+	}
+	catch(e) 
+	{
+		showError("Failed to delete user keys: "+e);
+	}	
+}
+
+async function loadUserKeys()
+{
+    await g_keyStore.open();
+
+    var username = $('#email').html().trim();
+
+    var list = await g_keyStore.listKeys();
+    if(list != null && list.length)  {	
+        for(var i=0;i<list.length;i++) {
+            if(list[i].value.name == username) {
+                if(list[i].value.privateKey) {
+                    $('#private_key_loaded').removeClass('glyphicon-remove-circle');
+                    $('#private_key_loaded').addClass('glyphicon-ok-circle');
+                } 
+                if(list[i].value.publicKey) {
+                    $('#public_key_loaded').removeClass('glyphicon-remove-circle');
+                    $('#public_key_loaded').addClass('glyphicon-ok-circle');
+                }
+
+                return;
+            }
+        }
+    }
+
+    var request = new XMLHttpRequest();
+    request.responseType = 'arraybuffer';
+
+    request.onreadystatechange = function() {
+         if(request.readyState === XMLHttpRequest.DONE) {
+            if(request.status === 200) {
+                try
+                {
+                    var blobs = parseResponseBlobs(request.response, 3);
+                    loadKeys(blobs[0], blobs[1], blobs[2]);
+                } 
+                catch(e) 
+                {
+                    showError("Failed to load user keys: "+e);
+                }
+            } else if(request.status == 500) {
+                showError(request.responseText);
+            }
+         }
+    }
+    request.open("GET", "?controller=user&action=get_binary_data", true);
+    request.send();
+}
+
+async function loadKeys(public_blob, private_blob, private_iv) 
+{
+    var username = $('#email').html().trim();
+
+    await g_keyStore.open();
+
+    try {
+        var crypto_public_key = await g_Crypt.subtle.importKey("spki", public_blob, {
+            name: 'RSA-OAEP',
+            modulusLength: 2048,
+            publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
+            hash: {name: "SHA-256"}
+            }, true, ["encrypt"]);
+
+        console.log('public: '+crypto_public_key);
+
+        var userpassword = localStorage.getItem("userPassword");
+
+        var decrypted_private_key = await decryptPrivateKey(private_blob, private_iv, userpassword);
+
+        // See, I told you, not so shady!
+        localStorage.setItem("userPassword", null);
+
+        var crypto_private_key  = await g_Crypt.subtle.importKey("pkcs8", decrypted_private_key, {
+            name: 'RSA-OAEP',
+            modulusLength: 2048,
+            publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
+            hash: {name: "SHA-256"}
+            }, false, ["decrypt"]);
+        
+        console.log('private: '+crypto_public_key);
+
+        await g_keyStore.storeKey(crypto_public_key, crypto_private_key, username);
+
+        $('#public_key_loaded').removeClass('glyphicon-remove-circle');
+        $('#public_key_loaded').addClass('glyphicon-ok-circle');
+        $('#private_key_loaded').removeClass('glyphicon-remove-circle');
+        $('#private_key_loaded').addClass('glyphicon-ok-circle');
+        
+    } catch(err) { 
+        showError('Error in keyLoaded: '+err);
+    }
+}
+
+async function decryptPrivateKey(encryptedPrivateKey, IV, password) 
+{
+    const pwUtf8 = new TextEncoder().encode(password);
+    const pwHash = await g_Crypt.subtle.digest('SHA-256', pwUtf8);
+
+    const alg = { name: 'AES-GCM', iv: IV };
+    const key = await g_Crypt.subtle.importKey('raw', pwHash, alg, false, ['decrypt']);
+
+    const ptBuffer = await g_Crypt.subtle.decrypt(alg, key, encryptedPrivateKey);
+
+    return ptBuffer;
+}
 
 var loading_goal = 0;
 function startLoading()

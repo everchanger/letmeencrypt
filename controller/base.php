@@ -6,7 +6,7 @@ class Base
 {
 
 	public function __construct() 
-	{		
+	{	
 	}
 	
 	protected function respondWithError($errorText, $errorCode=500)

@@ -180,6 +180,7 @@ class User extends Base
         }
 
         $_SESSION['signed_in_user_id'] = intval($user_id);
+        $_SESSION['signed_in_user_email'] = $email;
 
         respondWithStatus();
     }
@@ -204,6 +205,7 @@ class User extends Base
             }
 
             $_SESSION['signed_in_user_id'] = intval($current_user->id);
+            $_SESSION['signed_in_user_email'] = $email;
 		} 
 		catch(\Exception $e) 
 		{

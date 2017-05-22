@@ -150,10 +150,12 @@ function formatBytes($bytes, $precision = 2)
     return round($bytes, $precision) . ' ' . $units[$pow]; 
 } 
 
-function formatString($string, $maxLength, $numDots = 2) 
+function formatFileString($string, $maxLength, $numDots = 2) 
 {
 	if(strlen($string) > $maxLength) {
-		return substr($string, 0, $maxLength - $numDots) . str_repeat('.', $numDots);
+		$extension_pos = strrpos($string, '.');
+		$extension_length = strlen($string) - $extension_pos;
+		return substr($string, 0, $maxLength - $numDots-$extension_length) . str_repeat('-', $numDots) . substr($string, $extension_pos);
 	}
 
 	return $string;
@@ -212,6 +214,16 @@ function getGlyphMime($mime)
 	}
 
 	return $typeglyph;
+}
+
+function getFriendObject($friends, $friend_id) 
+{
+	foreach($friends as $friend) {
+		if($friend_id == $friend->id) {
+			return $friend->user_info;
+		}
+	}
+	return null;
 }
 
 ?>

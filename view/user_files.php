@@ -18,7 +18,7 @@
 						<span class="glyphicon <?=$typeglyph?> filebox-filetype"></span>
 					</div>
 					<div class="col-xs-9">
-						<?=formatString($file->original_name, 22)?>
+						<?=formatFileString($file->original_name, 22)?>
 					</div>
 					<div class="col-xs-1"> 
 						<a href="#" id="<?=$file->id?>" title="Delete file" class="remove_file"><span class="glyphicon glyphicon-remove filebox-remove"></span></a>
@@ -32,17 +32,23 @@
 					<div class="col-xs-10">
 						<?= ucfirst($filetype) . ' (.'.$file->extension.')'?>
 					</div>
-					<div class="col-xs-2 filebox-download-holder"> 
-						<a href="#" name="<?=$file->original_name?>" id="<?=$file->id?>" class="download_file" title="Download file"><span class=" glyphicon glyphicon-download filebox-download"></span></a>
-					</div>
+					
 					<div class="col-xs-10">
 						<?=$file->upload_date?>
 					</div>
-					<div class="col-xs-12 hidden-elm">
-						<a href="#" class="show-more">More...</a>
+					<div class="col-xs-2 filebox-download-holder"> 
+						<a href="#" name="<?=$file->original_name?>" id="<?=$file->id?>" class="download_file" title="Download file"><span class=" glyphicon glyphicon-download-alt filebox-download"></span></a>
 					</div>
-				</div>
-				<div class="filebox-body hidden-elm">
+					<div class="col-xs-10">
+						<?php 
+							$friend = getFriendObject($friends, $file->encrypter_user_id);
+							if($friend == null) {
+								echo 'Myself';
+							} else {
+								echo $friend->email;
+							}
+						?>
+					</div>
 				</div>
 			</div>
 		</div>
