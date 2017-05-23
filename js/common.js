@@ -1,5 +1,9 @@
 g_keyStore = new KeyStore();
 
+if (window.crypto && !window.crypto.subtle && window.crypto.webkitSubtle) {
+    window.crypto.subtle = window.crypto.webkitSubtle;
+}
+
 var g_Crypt = window.crypto || window.msCrypto;
 
 $(document).on('change', ':file', function() {
