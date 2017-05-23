@@ -161,6 +161,15 @@ function formatFileString($string, $maxLength, $numDots = 2)
 	return $string;
 }
 
+function formatString($string, $maxLength, $numDots = 2) 
+{
+	if(strlen($string) > $maxLength) {
+		return substr($string, 0, $maxLength - $numDots) . str_repeat('.', $numDots);
+	}
+
+	return $string;
+}
+
 function splitMime($mime)
 {
 	$ret = array();

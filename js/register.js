@@ -1,6 +1,29 @@
+var usingKeyPassword = false;
+var usingKeyLocal = false;
+
 $(document).ready(function() 
 {
     $('#register').on('submit', handleRegistration);
+
+    $('input[type=radio][name=key_choice]').change(function() {
+        if(this.id != 'opt0') {
+            usingKeyPassword = true;
+            $('#key_password1').attr('required', true);
+            $('#key_password2').attr('required', true);
+            $('#key_passwords').show();
+        } else {
+            usingKeyPassword = false;
+            $('#key_password1').attr('required', false);
+            $('#key_password2').attr('required', false);
+            $('#key_passwords').hide();
+        }
+
+        if(this.id == 'opt2') {
+            usingKeyLocal = true;
+        } else {
+            usingKeyLocal = false;
+        }
+    });
 });
 
 async function handleRegistration(evt) {
@@ -32,7 +55,22 @@ async function handleRegistration(evt) {
         return;
     }
 
-    localStorage.setItem("userPassword", password);
+    var key_password = password;
+    var keypassword1  = $('#key_password1').val();
+    var keypassword2 = $('#key_password2').val(); 
+
+    if(usingKeyPassword) 
+    {
+        if(keypassword1 != keypassword2) {
+            showError("Key passwords doesn't match");
+            endLoading();
+            return;
+        }
+
+        key_password = keypassword1;
+    }
+
+    localStorage.setItem("userPassword", key_password);
 
     try
     {
@@ -45,12 +83,23 @@ async function handleRegistration(evt) {
 
         loading(15);
 
-        var encryptedOutput = await encryptPrivateKey(private_key, password);
+        var encryptedOutput = await encryptPrivateKey(private_key, key_password);
 
         loading(25);
+        
+        var private_blob = null;
+        var iv_blob = null;
+        var file_blob = null;
 
-        var private_blob = new Blob([encryptedOutput.encryptedKey], {type: "application/octet-stream"});
-        var iv_blob = new Blob([encryptedOutput.IV], {type: "application/octet-stream"});
+        if(usingKeyLocal) 
+        {
+            file_blob = new Blob([encryptedOutput.IV, encryptedOutput.encryptedKey], {type: "application/octet-stream"});
+        } 
+        else 
+        {
+            private_blob = new Blob([encryptedOutput.encryptedKey], {type: "application/octet-stream"});
+            iv_blob = new Blob([encryptedOutput.IV], {type: "application/octet-stream"});
+        }
     }
     catch(e)
     {
@@ -62,17 +111,23 @@ async function handleRegistration(evt) {
     loading(10);
 
     // Let the user decide if he/she wants to download a copy of the private key.
-    // saveBinaryDataAs(private_key, user_email.substring(0, user_email.indexOf('@'))+'.private_key');
-   
+    if(usingKeyLocal) 
+    {
+        // Need to sqeeze private_blob and iv_blob into a single blob, then save that blob to a file for the user to keep
+        saveBinaryDataAs(file_blob, user_email.substring(0, user_email.indexOf('@'))+'.private_key');
+    }
+    
     var formData = new FormData();
     formData.append("email", user_email);
     formData.append("password1", password);
     formData.append("password2", password2);
     formData.append('public_key', public_blob, 'public');
 
-    // We should not send/store the private key unencrypted. If we store it we should encrypt it somehow, maybe with the users password?
-    formData.append('private_key', private_blob, 'private');
-    formData.append('private_iv', iv_blob, 'private_iv');
+    if(usingKeyLocal == false) 
+    {
+        formData.append('private_key', private_blob, 'private');
+        formData.append('private_iv', iv_blob, 'private_iv');
+    }
     
     var request = new XMLHttpRequest();
 

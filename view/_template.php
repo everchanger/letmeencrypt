@@ -39,12 +39,12 @@
           <ul class="dropdown-menu">
             <li>
 							<div >
-									<p class="help-block">View the current status of your keys.</p>
+									<p class="help-block-navbar">View the current status of your keys.</p>
 									<p>Public key:  <span class="glyphicon key_status glyphicon-remove-circle" id="public_key_loaded"></span></p>
 									<p>Private key: <span class="glyphicon key_status glyphicon-remove-circle" id="private_key_loaded"></span></p>
 									<div>
-										<a href="#" id="load_private_key" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#privateModal">Load private key</a>
-										<a href="#" id="clear_loaded_keys" class="btn btn-primary btn-xs">Clear keys</a>
+										<a href="#" id="show_load_private_key" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#privateModal" title="Load your private key, this is only nessesary if you choose to store your private key offline.">Load private key</a>
+										<a href="#" id="clear_loaded_keys" class="btn btn-primary btn-xs" title="Clear your keys if you're using a shared computer to minimize risk of private key compromises">Clear keys</a>
 									</div>
 							</div>				
 						</li>
@@ -142,31 +142,7 @@
 			</div>
 		</footer>-->	
 
-		<div id="privateModal" class="modal fade">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-						<h4 class="modal-title">Load private key</h4>
-					</div>
-					<div class="modal-body">
-							<div class="input-group">
-								<label for="private_key" class="input-group-btn">
-									<span class="btn btn-primary">Browse
-										<input type="file" id="private_key" accept="privateKey" onchange="readKeyFromInput(this.files)" class="hidden">
-									</span>
-								</label>
-								<input type="text" class="form-control" readonly="">
-							</div>
-							<p class="help-block">Your private key will not be submited to the server only used localy by javascript to decrypt your files for you.</p>
-					</div>
-					<div class="modal-footer">
-						<button type="button" id="encrypt" class="btn btn-primary" disabled data-dismiss="modal">Load and decrypt</button>
-						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					</div>
-				</div>
-			</div>
-		</div>
+		<?php include 'view/load_private_key.php' ?>
 
 		<!-- JAVASCRIPT -->
 		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>

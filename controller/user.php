@@ -146,8 +146,14 @@ class User extends Base
         // Validate the public and private keys before storing them.
 
         $public_key     = file_get_contents($_FILES['public_key']['tmp_name']);
-        $private_key    = file_get_contents($_FILES['private_key']['tmp_name']);
-        $private_iv     = file_get_contents($_FILES['private_iv']['tmp_name']);
+        $private_key    = null;
+        $private_iv     = null;
+        
+        if(array_key_exists('private_key', $_FILES)) 
+        {
+            $private_key    = file_get_contents($_FILES['private_key']['tmp_name']);
+            $private_iv     = file_get_contents($_FILES['private_iv']['tmp_name']);
+        }
         
         if(!strlen($email)) 
         {

@@ -4,7 +4,7 @@
 			<h3>Encrypt file</h3>
 			<div class="col-xs-12">
 				<p class="help-block">Encrypt a file for storage, either for yourself or for a friend.</p>
-				<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">ENCRYPT</button>
+				<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Encrypt</button>
 			</div>
 		</div>
 	</div>

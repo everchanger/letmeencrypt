@@ -45,7 +45,7 @@
 							if($friend == null) {
 								echo 'Myself';
 							} else {
-								echo $friend->email;
+								echo "<a href='?controller=user&action=profile&id=".$friend->id."' title='".$friend->email."'>".formatString($friend->email, 22)."</a>";
 							}
 						?>
 					</div>

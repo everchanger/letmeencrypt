@@ -117,7 +117,7 @@ class Friend
             }
 
             if($friend->connected && !$friend->accepted) {
-                if($friendship->user_id_1 == $user_id) {
+                if($friendship->user_id_1 == $friend->id) {
                     $friend->requestRecieved = true;
                 } else {
                     $friend->requestSent = true;

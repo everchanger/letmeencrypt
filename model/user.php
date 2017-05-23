@@ -6,7 +6,7 @@ class User
 {
     public function addUser($email, $password_hash, $public_key, $private_key, $private_iv) 
     {
-        if(!isset($email) || !isset($password_hash) || !isset($public_key) || !isset($private_key)|| !isset($private_iv)) 
+        if(!isset($email) || !isset($password_hash) || !isset($public_key)) 
         {
             throw new \Exception("One or more input parameters are not set", ERROR_CODE_INVALID_PARAMETERS);
         }

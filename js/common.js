@@ -65,7 +65,26 @@ $(document).ready(function() {
 
 	});
 
-	if($('#email').html().trim().length > 0) 
+	if($('#clear_loaded_keys')) {
+		$('#clear_loaded_keys').on('click', function() {
+		// This is not as shady as it looks, we stored the users password temporary to be able to decrypt the private key!
+		if(confirm('Clear your keys from storage? This means you will have to load/unlock your private key again.')) 
+        {
+            deleteKeys();
+        }
+	});}
+
+    $('#load_private_key').on('click', function() {
+		var files = $('#private_key').prop("files");
+		readDataFromFileInput(files, loadEncryptedPrivateKey);			
+	});
+
+    $('#private_key').on('change', function() 
+    {
+		$('#load_private_key').prop("disabled", false); 		
+	});
+
+    if($('#email').html().trim().length > 0) 
 	{
 		try{
 			loadUserKeys();
@@ -74,13 +93,6 @@ $(document).ready(function() {
 		{
 			alert(e);
 		}
-	}
-
-	if($('#clear_loaded_keys')) {
-		$('#clear_loaded_keys').on('click', function() {
-		// This is not as shady as it looks, we stored the users password temporary to be able to decrypt the private key!
-		deleteKeys();
-	});
 	}
 });
 
@@ -107,6 +119,57 @@ async function deleteKeys()
 	}	
 }
 
+async function loadEncryptedPrivateKey(filedata) 
+{
+    var username = $('#email').html().trim();
+    var password = $('#private_password').val();
+    var tmp = new Uint8Array(filedata.data);
+    var iv = tmp.slice(0, 12);
+    var key = tmp.slice(12);
+
+    try 
+	{
+        var decrypted_private_key = await decryptPrivateKey(key, iv, password);
+        var crypto_private_key  = await g_Crypt.subtle.importKey("pkcs8", decrypted_private_key, {
+            name: 'RSA-OAEP',
+            modulusLength: 2048,
+            publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
+            hash: {name: "SHA-256"}
+            }, false, ["decrypt"]);
+        
+        console.log('private: '+crypto_private_key);
+
+        await g_keyStore.storeKey(null, crypto_private_key, username);
+    }
+    catch(e)
+    {
+        showError("Failed to decrypt private key: "+e);
+    }
+
+    showSuccess("Private key decrypted and loaded, ready to decrypt");
+    updateKeyStatus(false, true);
+}
+
+function updateKeyStatus(isPublicKey, loaded)
+{
+    var selector = '#public_key_loaded';
+    var classToAdd = 'glyphicon-ok-circle';
+    var classToRemove = 'glyphicon-remove-circle';
+    
+    if(!loaded) {
+        classToRemove   = 'glyphicon-ok-circle';
+        classToAdd      = 'glyphicon-remove-circle';
+    }
+
+    if(!isPublicKey) 
+    {
+        selector = '#private_key_loaded';        
+    }
+    
+    $(selector).removeClass(classToRemove);
+    $(selector).addClass(classToAdd);
+}
+
 async function loadUserKeys()
 {
     await g_keyStore.open();
@@ -118,12 +181,10 @@ async function loadUserKeys()
         for(var i=0;i<list.length;i++) {
             if(list[i].value.name == username) {
                 if(list[i].value.privateKey) {
-                    $('#private_key_loaded').removeClass('glyphicon-remove-circle');
-                    $('#private_key_loaded').addClass('glyphicon-ok-circle');
+                    updateKeyStatus(false, true);
                 } 
                 if(list[i].value.publicKey) {
-                    $('#public_key_loaded').removeClass('glyphicon-remove-circle');
-                    $('#public_key_loaded').addClass('glyphicon-ok-circle');
+                    updateKeyStatus(true, true);
                 }
 
                 return;
@@ -189,10 +250,8 @@ async function loadKeys(public_blob, private_blob, private_iv)
 
         await g_keyStore.storeKey(crypto_public_key, crypto_private_key, username);
 
-        $('#public_key_loaded').removeClass('glyphicon-remove-circle');
-        $('#public_key_loaded').addClass('glyphicon-ok-circle');
-        $('#private_key_loaded').removeClass('glyphicon-remove-circle');
-        $('#private_key_loaded').addClass('glyphicon-ok-circle');
+        updateKeyStatus(false, true);
+        updateKeyStatus(true, true);
         
     } catch(err) { 
         showError('Error in keyLoaded: '+err);
