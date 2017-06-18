@@ -200,6 +200,7 @@ function updateKeyStatus(isPublicKey, status)
             if(!isPublicKey) {
                 $('#show_load_private_key').show();
             }
+            $('#show_unlock_private_key').hide();
             $('#clear_loaded_keys').hide();
             
         break;
@@ -211,6 +212,7 @@ function updateKeyStatus(isPublicKey, status)
                 $('#show_load_private_key').hide();
                 $('#show_unlock_private_key').show();
             }
+            $('#clear_loaded_keys').hide();
             
         break;
         case KEYS_STORED:
@@ -221,6 +223,7 @@ function updateKeyStatus(isPublicKey, status)
                 $('#show_load_private_key').hide();
                 $('#show_unlock_private_key').hide();
             }
+            $('#clear_loaded_keys').show();
         break;
     }
 
