@@ -43,8 +43,9 @@
 									<p>Public key:  <span class="glyphicon key_status glyphicon-remove-circle" id="public_key_loaded"></span></p>
 									<p>Private key: <span class="glyphicon key_status glyphicon-remove-circle" id="private_key_loaded"></span></p>
 									<div>
-										<a href="#" id="show_load_private_key" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#privateModal" title="Load your private key, this is only nessesary if you choose to store your private key offline.">Load private key</a>
-										<a href="#" id="clear_loaded_keys" class="btn btn-primary btn-xs" title="Clear your keys if you're using a shared computer to minimize risk of private key compromises">Clear keys</a>
+										<a href="#" id="show_load_private_key" class="hidden-elm btn btn-primary btn-xs" data-toggle="modal" data-target="#privateModal" title="Load your private key, this is only nessesary if you choose to store your private key offline.">Load private key</a>
+										<a href="#" id="show_unlock_private_key" class="hidden-elm btn btn-primary btn-xs" data-toggle="modal" data-target="#privateUnlockModal" title="Unlock your private key, this is only nessesary if you choose a different password than account password.">Unlock private key</a>
+										<a href="#" id="clear_loaded_keys" class="hidden-elm btn btn-primary btn-xs" title="Clear your keys if you're using a shared computer to minimize risk of private key compromises">Clear keys</a>
 									</div>
 							</div>				
 						</li>
@@ -143,6 +144,7 @@
 		</footer>-->	
 
 		<?php include 'view/load_private_key.php' ?>
+		<?php include 'view/unlock_private_key.php' ?>
 
 		<!-- JAVASCRIPT -->
 		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>

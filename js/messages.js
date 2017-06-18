@@ -29,6 +29,7 @@ function showWarning(warningText)
 
 function showMessage(message, panelType) 
 {
+	$('#user_message').text('');
 	if(message.length > 128)
 	{
 		message = message.substr(0, 125);

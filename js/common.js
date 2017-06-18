@@ -1,5 +1,15 @@
 g_keyStore = new KeyStore();
 
+var KEYS_UNLOADED = 0;
+var KEYS_LOADED = 1;
+var KEYS_STORED = 2;
+
+// We store the blobs here until the user has decrypted the private key.
+// After that we can store the objects in the indexDB.
+g_publicBlob = null;
+g_privateBlob = null;
+g_privateIVBlob = null;
+
 if (window.crypto && !window.crypto.subtle && window.crypto.webkitSubtle) {
     window.crypto.subtle = window.crypto.webkitSubtle;
 }
@@ -79,6 +89,18 @@ $(document).ready(function() {
 		readDataFromFileInput(files, loadEncryptedPrivateKey);			
 	});
 
+    $('#unlock_private_key').on('click', function() {
+        var pwd1 = $('#private_password1').val();
+        var pwd2 = $('#private_password2').val();
+
+        if(pwd1 != pwd2) {
+            showError("Passwords doesn't match");
+            return;
+        }
+
+		unlockPrivateKey(pwd1);			
+	});
+
     $('#private_key').on('change', function() 
     {
 		$('#load_private_key').prop("disabled", false); 		
@@ -87,7 +109,7 @@ $(document).ready(function() {
     if($('#email').html().trim().length > 0) 
 	{
 		try{
-			loadUserKeys();
+			initUserKeys();
 		}
 		catch(e) 
 		{
@@ -104,12 +126,23 @@ async function deleteKeys()
 
 	try 
 	{
-		await g_keyStore.deleteKey(username);
-		$('#public_key_loaded').removeClass('glyphicon-ok-circle');
-		$('#public_key_loaded').addClass('glyphicon-remove-circle');
-        
-		$('#private_key_loaded').removeClass('glyphicon-ok-circle');
-		$('#private_key_loaded').addClass('glyphicon-remove-circle');
+        var found = false;
+        var list = await g_keyStore.listKeys();
+        if(list != null && list.length)  {	
+            for(var i=0;i<list.length;i++) {
+                if(list[i].value.name == username) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if(found) {
+            await g_keyStore.deleteKey(username);
+        }
+
+		updateKeyStatus(true, KEYS_UNLOADED);
+        updateKeyStatus(false, KEYS_UNLOADED);
     				
 		showSuccess("Deleted loaded keys");
 	}
@@ -129,36 +162,66 @@ async function loadEncryptedPrivateKey(filedata)
 
     try 
 	{
-        var decrypted_private_key = await decryptPrivateKey(key, iv, password);
-        var crypto_private_key  = await g_Crypt.subtle.importKey("pkcs8", decrypted_private_key, {
-            name: 'RSA-OAEP',
-            modulusLength: 2048,
-            publicExponent: new Uint8Array([1, 0, 1]),  // 24 bit representation of 65537
-            hash: {name: "SHA-256"}
-            }, false, ["decrypt"]);
-        
-        console.log('private: '+crypto_private_key);
-
-        await g_keyStore.storeKey(null, crypto_private_key, username);
+        loadKeys(g_publicBlob, key, iv, password);
     }
     catch(e)
     {
-        showError("Failed to decrypt private key: "+e);
+        showError("Failed to load keys: "+e);
     }
 
-    showSuccess("Private key decrypted and loaded, ready to decrypt");
-    updateKeyStatus(false, true);
+    showSuccess("Keys decrypted and loaded, ready to use");
 }
 
-function updateKeyStatus(isPublicKey, loaded)
+async function unlockPrivateKey(password) 
+{
+    try 
+	{
+        loadKeys(g_publicBlob, g_privateBlob, g_privateIVBlob, password);
+    }
+    catch(e)
+    {
+        showError("Failed to load keys: "+e);
+    }
+
+    showSuccess("Keys decrypted and loaded, ready to use");
+}
+
+function updateKeyStatus(isPublicKey, status)
 {
     var selector = '#public_key_loaded';
     var classToAdd = 'glyphicon-ok-circle';
     var classToRemove = 'glyphicon-remove-circle';
     
-    if(!loaded) {
-        classToRemove   = 'glyphicon-ok-circle';
-        classToAdd      = 'glyphicon-remove-circle';
+    switch(status) {
+        case KEYS_UNLOADED:
+            classToRemove = 'glyphicon-ok-circle glyphicon-adjust';
+            classToAdd = 'glyphicon-remove-circle';
+
+            if(!isPublicKey) {
+                $('#show_load_private_key').show();
+            }
+            $('#clear_loaded_keys').hide();
+            
+        break;
+        case KEYS_LOADED:
+            classToRemove = 'glyphicon-remove-circle glyphicon-ok-circle';
+            classToAdd = 'glyphicon-adjust';
+
+            if(!isPublicKey) {
+                $('#show_load_private_key').hide();
+                $('#show_unlock_private_key').show();
+            }
+            
+        break;
+        case KEYS_STORED:
+            classToRemove = 'glyphicon-remove-circle glyphicon-adjust';
+            classToAdd   = 'glyphicon-ok-circle';
+
+            if(!isPublicKey) {
+                $('#show_load_private_key').hide();
+                $('#show_unlock_private_key').hide();
+            }
+        break;
     }
 
     if(!isPublicKey) 
@@ -170,7 +233,7 @@ function updateKeyStatus(isPublicKey, loaded)
     $(selector).addClass(classToAdd);
 }
 
-async function loadUserKeys()
+async function initUserKeys()
 {
     await g_keyStore.open();
 
@@ -181,10 +244,10 @@ async function loadUserKeys()
         for(var i=0;i<list.length;i++) {
             if(list[i].value.name == username) {
                 if(list[i].value.privateKey) {
-                    updateKeyStatus(false, true);
+                    updateKeyStatus(false, KEYS_STORED);
                 } 
                 if(list[i].value.publicKey) {
-                    updateKeyStatus(true, true);
+                    updateKeyStatus(true, KEYS_STORED);
                 }
 
                 return;
@@ -201,7 +264,28 @@ async function loadUserKeys()
                 try
                 {
                     var blobs = parseResponseBlobs(request.response, 3);
-                    loadKeys(blobs[0], blobs[1], blobs[2]);
+
+                    g_publicBlob = blobs[0];
+                    g_privateBlob = blobs[1];
+                    g_privateIVBlob = blobs[2];
+
+                    var userpassword = localStorage.getItem("userPassword");
+                    // See, I told you, not so shady!
+                    localStorage.removeItem("userPassword");
+
+                    if(g_privateBlob.length <= 0) {
+                        showError('Your private key could not be fetched, you need to load it');
+                        updateKeyStatus(false, KEYS_UNLOADED);
+                        updateKeyStatus(true, KEYS_LOADED);
+                        return;
+                    } else if(userpassword == null) {
+                        showError('You need to enter your password for the private key');
+                        updateKeyStatus(false, KEYS_LOADED);
+                        updateKeyStatus(true, KEYS_LOADED);
+                        return;
+                    }
+
+                    loadKeys(g_publicBlob, g_privateBlob, g_privateIVBlob, userpassword);
                 } 
                 catch(e) 
                 {
@@ -216,7 +300,7 @@ async function loadUserKeys()
     request.send();
 }
 
-async function loadKeys(public_blob, private_blob, private_iv) 
+async function loadKeys(public_blob, private_blob, private_iv, password) 
 {
     var username = $('#email').html().trim();
 
@@ -232,12 +316,7 @@ async function loadKeys(public_blob, private_blob, private_iv)
 
         console.log('public: '+crypto_public_key);
 
-        var userpassword = localStorage.getItem("userPassword");
-
-        var decrypted_private_key = await decryptPrivateKey(private_blob, private_iv, userpassword);
-
-        // See, I told you, not so shady!
-        localStorage.setItem("userPassword", null);
+        var decrypted_private_key = await decryptPrivateKey(private_blob, private_iv, password);
 
         var crypto_private_key  = await g_Crypt.subtle.importKey("pkcs8", decrypted_private_key, {
             name: 'RSA-OAEP',
@@ -246,12 +325,12 @@ async function loadKeys(public_blob, private_blob, private_iv)
             hash: {name: "SHA-256"}
             }, false, ["decrypt"]);
         
-        console.log('private: '+crypto_public_key);
+        console.log('private: '+crypto_private_key);
 
         await g_keyStore.storeKey(crypto_public_key, crypto_private_key, username);
 
-        updateKeyStatus(false, true);
-        updateKeyStatus(true, true);
+        updateKeyStatus(false, KEYS_STORED);
+        updateKeyStatus(true, KEYS_STORED);
         
     } catch(err) { 
         showError('Error in keyLoaded: '+err);
